@@ -59,11 +59,25 @@
     border: 2px solid transparent;
     background:
       linear-gradient(#fffafc, #fffafc) padding-box,
-      linear-gradient(135deg, #ffb3cb, #ffe3a3, #ffb3cb) border-box;
+      linear-gradient(135deg, #b8860b, #f7e7a1 25%, #c9a227 50%, #f7e7a1 75%, #b8860b) border-box;
     border-radius: 28px;
-    padding: 32px 22px;
+    padding: 36px 22px;
     text-align: center;
-    box-shadow: 0 20px 50px rgba(194, 47, 98, 0.18);
+    position: relative;
+    box-shadow:
+      inset 0 0 0 7px #fffafc, inset 0 0 0 8px rgba(201, 162, 39, .45),
+      0 25px 60px rgba(120, 20, 60, 0.22), 0 0 40px rgba(247, 231, 161, .35);
+  }
+  .card::before, .card::after {
+    content: ''; position: absolute; width: 46px; height: 46px; pointer-events: none;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Cpath d='M4 56 V20 Q4 4 20 4 H56' fill='none' stroke='%23c9a227' stroke-width='2'/%3E%3Cpath d='M10 56 V24 Q10 10 24 10 H56' fill='none' stroke='%23e6c766' stroke-width='1'/%3E%3Ccircle cx='20' cy='20' r='3' fill='%23c9a227'/%3E%3C/svg%3E") no-repeat center / contain;
+  }
+  .card::before { top: 12px; left: 12px; }
+  .card::after { bottom: 12px; right: 12px; transform: rotate(180deg); }
+
+  h2::after {
+    content: ''; display: block; width: 130px; height: 13px; margin: 10px auto 0;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 14'%3E%3Cpath d='M0 7 H58 M82 7 H140' stroke='%23c9a227' stroke-width='1.2'/%3E%3Cpath d='M70 1 L76 7 L70 13 L64 7 Z' fill='%23c9a227'/%3E%3Ccircle cx='58' cy='7' r='1.8' fill='%23c9a227'/%3E%3Ccircle cx='82' cy='7' r='1.8' fill='%23c9a227'/%3E%3C/svg%3E") no-repeat center / contain;
   }
 
   /* card contents slide in one after another when a page opens.
@@ -82,6 +96,43 @@
   }
   @keyframes rise-in { from { opacity: 0; transform: translateY(18px); } }
   @keyframes pop-in { from { opacity: 0; transform: scale(.3) rotate(-15deg); } }
+
+  /* gold glitter */
+  #glitter { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+
+  /* opening: velvet curtains with a gold monogram */
+  #intro { position: fixed; inset: 0; z-index: 200; cursor: pointer; }
+  .curtain {
+    position: absolute; top: 0; bottom: 0; width: 50.5%;
+    background:
+      repeating-linear-gradient(90deg, rgba(0,0,0,.18) 0 2px, transparent 2px 26px),
+      linear-gradient(180deg, #7a1236, #4a0820);
+    transition: transform 1.2s cubic-bezier(.7, 0, .3, 1);
+  }
+  .curtain.l { left: 0; border-right: 3px solid #c9a227; }
+  .curtain.r { right: 0; border-left: 3px solid #c9a227; }
+  #intro.open .curtain.l { transform: translateX(-102%); }
+  #intro.open .curtain.r { transform: translateX(102%); }
+  .intro-inner {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px;
+    transition: opacity .5s ease;
+  }
+  #intro.open .intro-inner { opacity: 0; }
+  .ring { position: relative; width: 170px; height: 170px; }
+  .ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+  .ring circle { fill: none; stroke: url(#goldGrad); stroke-width: 2.5; stroke-dasharray: 503; stroke-dashoffset: 503; animation: draw 1.4s ease forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .mono {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-family: "Aref Ruqaa", serif; font-size: 56px;
+    background: linear-gradient(90deg, #b8860b, #fff3c4, #c9a227, #fff3c4, #b8860b);
+    background-size: 300% 100%;
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    animation: fade-in .8s ease .9s backwards, text-shine 3s linear infinite;
+  }
+  .intro-sub { color: #f7e7a1; font-size: 15px; letter-spacing: 1px; animation: fade-in .8s ease 1.3s backwards; }
+  @keyframes fade-in { from { opacity: 0; transform: translateY(8px); } }
 
   /* journey progress */
   .progress {
@@ -163,6 +214,7 @@
     position: relative; overflow: hidden;
   }
   .btn:not(.option):not(.wa):not(.wa-like) { background: linear-gradient(135deg, #f0628f, var(--accent) 50%, var(--accent-dark)); }
+  .btn:not(.option):not(.wa) { border: 1.5px solid rgba(247, 231, 161, .9); text-shadow: 0 1px 2px rgba(90, 10, 40, .25); }
   .btn:not(.option)::after {
     content: ''; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%;
     background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .45), transparent);
@@ -197,8 +249,9 @@
     width: 100%; max-height: 42vh;
     object-fit: cover; object-position: top;
     border-radius: 20px;
-    border: 5px solid #fff;
-    box-shadow: 0 10px 24px rgba(194, 47, 98, 0.25);
+    padding: 5px;
+    background: linear-gradient(135deg, #b8860b, #f7e7a1, #c9a227, #f7e7a1);
+    box-shadow: 0 14px 30px rgba(120, 20, 60, 0.3);
     margin: 6px 0 18px;
     transform: rotate(-2deg);
   }
@@ -242,6 +295,7 @@
   .album img {
     width: 100%; height: 50vh; object-fit: contain;
     background: var(--soft); border-radius: 18px; display: block;
+    border: 1.5px solid rgba(201, 162, 39, .6);
   }
   .album figcaption { font-weight: 600; font-size: 16px; margin-top: 10px; min-height: 2.6em; line-height: 1.6; }
   .album-count { direction: ltr; font-size: 13px; font-weight: 800; color: var(--accent-dark); margin-bottom: 4px; }
@@ -304,10 +358,27 @@
 <div class="hearts" id="hearts">
   <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
 </div>
+<canvas id="glitter"></canvas>
+
+<div id="intro">
+  <div class="curtain l"></div>
+  <div class="curtain r"></div>
+  <div class="intro-inner">
+    <div class="ring">
+      <svg viewBox="0 0 170 170">
+        <defs><linearGradient id="goldGrad" x1="0" x2="1"><stop offset="0" stop-color="#b8860b"/><stop offset=".5" stop-color="#fff3c4"/><stop offset="1" stop-color="#c9a227"/></linearGradient></defs>
+        <circle cx="85" cy="85" r="80"/>
+      </svg>
+      <div class="mono">نوارتي</div>
+    </div>
+    <div class="intro-sub">✦ إلك وبس ✦</div>
+  </div>
+</div>
+
 <div class="progress"><div id="progress"></div></div>
 
 <!-- page 1: the greeting -->
-<section class="page active" id="p1">
+<section class="page" id="p1">
   <div class="card">
     <div class="emoji-big">🎂</div>
     <h1>كل عام وانتي بخير يا نوارتي</h1>
@@ -537,7 +608,7 @@
   // ---- floating hearts ----
   const heartsBox = document.getElementById('hearts');
   const heartChars = ['💖', '💕', '🌸', '💗', '✨'];
-  for (let i = 0; i < 18; i++) {
+  for (let i = 0; i < 12; i++) {
     const s = document.createElement('span');
     s.textContent = heartChars[i % heartChars.length];
     s.style.left = Math.random() * 100 + 'vw';
@@ -914,7 +985,7 @@
 
   // ---- confetti ----
   function confetti() {
-    const bits = ['🎉', '💖', '🎊', '💕', '✨', '🌸', '🎈'];
+    const bits = ['🎉', '💖', '✨', '💛', '🌟', '💕', '👑'];
     for (let i = 0; i < 70; i++) {
       const c = document.createElement('span');
       c.className = 'confetti';
@@ -928,7 +999,48 @@
     }
   }
 
-  go('p1');
+  // ---- gold glitter ----
+  (function glitter() {
+    const cv = document.getElementById('glitter');
+    const ctx = cv.getContext('2d');
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let W, H;
+    const resize = () => { W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); };
+    resize(); addEventListener('resize', resize);
+    const dots = Array.from({ length: 55 }, () => ({
+      x: Math.random() * innerWidth, y: Math.random() * innerHeight,
+      r: .6 + Math.random() * 1.8, vy: .15 + Math.random() * .35, vx: (Math.random() - .5) * .2,
+      t: Math.random() * Math.PI * 2, s: .02 + Math.random() * .04,
+    }));
+    (function frame() {
+      ctx.clearRect(0, 0, W, H);
+      for (const d of dots) {
+        d.y += d.vy; d.x += d.vx; d.t += d.s;
+        if (d.y > H + 5) { d.y = -5; d.x = Math.random() * W; }
+        const a = .35 + .65 * Math.abs(Math.sin(d.t));
+        ctx.fillStyle = `rgba(212, 175, 55, ${a})`;
+        ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2); ctx.fill();
+        if (d.r > 1.9 && a > .9) { // the odd one twinkles as a little star
+          ctx.strokeStyle = `rgba(255, 243, 196, ${a})`; ctx.lineWidth = .8;
+          ctx.beginPath(); ctx.moveTo(d.x - 5, d.y); ctx.lineTo(d.x + 5, d.y); ctx.moveTo(d.x, d.y - 5); ctx.lineTo(d.x, d.y + 5); ctx.stroke();
+        }
+      }
+      requestAnimationFrame(frame);
+    })();
+  })();
+
+  // ---- intro: curtains open, then the first page ----
+  const intro = document.getElementById('intro');
+  let opened = false;
+  function openIntro() {
+    if (opened) return;
+    opened = true;
+    intro.classList.add('open');
+    setTimeout(() => go('p1'), 500);
+    setTimeout(() => intro.remove(), 1400);
+  }
+  intro.addEventListener('click', openIntro);
+  setTimeout(openIntro, 2600);
 </script>
 </body>
 </html>
