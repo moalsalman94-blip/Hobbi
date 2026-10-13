@@ -56,11 +56,66 @@
   .card {
     width: 100%; max-width: 440px;
     margin: auto;
-    background: var(--card);
+    border: 2px solid transparent;
+    background:
+      linear-gradient(#fffafc, #fffafc) padding-box,
+      linear-gradient(135deg, #ffb3cb, #ffe3a3, #ffb3cb) border-box;
     border-radius: 28px;
     padding: 32px 22px;
     text-align: center;
     box-shadow: 0 20px 50px rgba(194, 47, 98, 0.18);
+  }
+
+  /* card contents slide in one after another when a page opens.
+     "backwards" only: a transform left on these after the animation would
+     break the runaway (position: fixed) buttons inside them */
+  .page.active .card > * {
+    animation: rise-in .55s cubic-bezier(.2, .8, .3, 1.2) backwards;
+    animation-delay: calc(var(--i, 0) * 80ms);
+  }
+  .page.active .card > .gift {
+    animation: rise-in .55s cubic-bezier(.2, .8, .3, 1.2) backwards, pulse 1.6s ease-in-out 1s infinite;
+    animation-delay: calc(var(--i, 0) * 80ms), 1s;
+  }
+  .page.active .card > .emoji-big {
+    animation: pop-in .6s cubic-bezier(.2, .8, .3, 1.4) backwards, bounce 2s ease-in-out .6s infinite;
+  }
+  @keyframes rise-in { from { opacity: 0; transform: translateY(18px); } }
+  @keyframes pop-in { from { opacity: 0; transform: scale(.3) rotate(-15deg); } }
+
+  /* journey progress */
+  .progress {
+    position: fixed; top: 0; right: 0; left: 0; height: 5px; z-index: 60;
+    background: rgba(255, 255, 255, .5);
+  }
+  .progress div {
+    height: 100%; width: 0;
+    background: linear-gradient(90deg, #ffe08a, var(--accent));
+    border-radius: 0 0 0 6px;
+    transition: width .6s ease;
+    margin-right: 0; margin-left: auto;
+  }
+
+  /* soft moving colour blobs behind everything */
+  .blob {
+    position: absolute; border-radius: 50%;
+    filter: blur(60px); opacity: .55;
+    animation: drift 18s ease-in-out infinite alternate;
+  }
+  .blob.b1 { width: 60vmax; height: 60vmax; background: #ffb3cb; top: -20vmax; right: -20vmax; }
+  .blob.b2 { width: 50vmax; height: 50vmax; background: #ffe3a3; bottom: -20vmax; left: -20vmax; animation-duration: 22s; }
+  .blob.b3 { width: 40vmax; height: 40vmax; background: #e9c6ff; top: 40%; left: 30%; animation-duration: 26s; opacity: .35; }
+  @keyframes drift { to { transform: translate(-12vmax, 10vmax) scale(1.15); } }
+
+  /* little hearts that burst from every tap */
+  .burst {
+    position: fixed; z-index: 120; pointer-events: none;
+    font-size: 16px;
+    animation: burst .8s ease-out forwards;
+  }
+  @keyframes burst {
+    from { transform: translate(-50%, -50%) scale(.6); opacity: 1; }
+    to   { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.1); opacity: 0; }
   }
 
   .emoji-big { font-size: 64px; line-height: 1; margin-bottom: 8px; animation: bounce 2s ease-in-out infinite; }
@@ -69,10 +124,17 @@
   h1 {
     font-family: "Aref Ruqaa", serif;
     color: var(--accent-dark);
+    background: linear-gradient(90deg, var(--accent-dark), #e8a33d, var(--accent), var(--accent-dark));
+    background-size: 300% 100%;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: text-shine 6s linear infinite;
     font-size: 40px;
     margin: 6px 0 4px;
     line-height: 1.4;
   }
+  @keyframes text-shine { to { background-position: 300% 0; } }
+  h1 .e { -webkit-text-fill-color: initial; }
   h2 { font-size: 22px; margin: 4px 0 18px; line-height: 1.6; font-weight: 800; }
   p  { font-size: 17px; line-height: 1.9; margin: 0 0 14px; }
   .date {
@@ -98,7 +160,17 @@
     transition: transform .15s ease, background .2s ease;
     touch-action: manipulation;
     user-select: none; -webkit-user-select: none;
+    position: relative; overflow: hidden;
   }
+  .btn:not(.option):not(.wa):not(.wa-like) { background: linear-gradient(135deg, #f0628f, var(--accent) 50%, var(--accent-dark)); }
+  .btn:not(.option)::after {
+    content: ''; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .45), transparent);
+    animation: shine 3.2s ease-in-out infinite;
+  }
+  @keyframes shine { 0%, 60% { left: -60%; } 100% { left: 130%; } }
+  .option.selected { animation: picked .35s ease; }
+  @keyframes picked { 50% { transform: scale(1.05); } }
   .btn:active { transform: scale(0.96); }
 
   .options { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
@@ -229,7 +301,10 @@
 </head>
 <body>
 
-<div class="hearts" id="hearts"></div>
+<div class="hearts" id="hearts">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+</div>
+<div class="progress"><div id="progress"></div></div>
 
 <!-- page 1: the greeting -->
 <section class="page active" id="p1">
@@ -354,7 +429,7 @@
     <p class="label">نشوفك بعد:</p>
     <div class="countdown"></div>
     <a class="btn wa" id="wa" target="_blank" rel="noopener">ابعتيلي اختياراتك 💌</a>
-    <h1>بحبك 💖</h1>
+    <h1>بحبك <span class="e">💖</span></h1>
     <button class="btn option more" data-go="p1">من الأول 🔁</button>
   </div>
 </section>
@@ -473,8 +548,13 @@
   }
 
   // ---- page navigation ----
+  const order = ['p1', 'p1b', 'p1c', 'p2', 'p3', 'p3b', 'p6', 'p7', 'p8', 'p9', 'p10', 'p11', 'p4', 'p5'];
   function go(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === id));
+    const page = document.getElementById(id);
+    page.scrollTop = 0;
+    [...page.querySelector('.card').children].forEach((c, i) => c.style.setProperty('--i', i));
+    document.getElementById('progress').style.width = (order.indexOf(id) / (order.length - 1)) * 100 + '%';
     // bring back any escaped buttons so they start in place on revisit
     document.querySelectorAll('.runaway.escaped').forEach(b => {
       b.classList.remove('escaped');
@@ -815,6 +895,23 @@
     document.getElementById('certDownload').href = url;
   }
 
+  // ---- heart burst on every tap ----
+  document.addEventListener('pointerdown', e => {
+    if (!e.target.closest('.btn, .reason, .letter summary')) return;
+    for (let i = 0; i < 7; i++) {
+      const h = document.createElement('span');
+      h.className = 'burst';
+      h.textContent = ['💖', '💕', '✨'][i % 3];
+      const a = Math.random() * Math.PI * 2, d = 40 + Math.random() * 40;
+      h.style.left = e.clientX + 'px';
+      h.style.top = e.clientY + 'px';
+      h.style.setProperty('--dx', Math.cos(a) * d + 'px');
+      h.style.setProperty('--dy', Math.sin(a) * d + 'px');
+      document.body.appendChild(h);
+      h.addEventListener('animationend', () => h.remove());
+    }
+  });
+
   // ---- confetti ----
   function confetti() {
     const bits = ['🎉', '💖', '🎊', '💕', '✨', '🌸', '🎈'];
@@ -830,6 +927,8 @@
       c.addEventListener('animationend', () => c.remove());
     }
   }
+
+  go('p1');
 </script>
 </body>
 </html>
