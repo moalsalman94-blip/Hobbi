@@ -199,6 +199,9 @@
   .letter[open] summary::before { content: '💌 '; }
   .letter p { margin: 10px 0 0; font-size: 15px; }
 
+  .cert { width: 100%; border-radius: 12px; box-shadow: 0 10px 24px rgba(194, 47, 98, 0.25); margin-bottom: 14px; display: block; }
+  .wa-like { display: inline-block; text-decoration: none; background: #c9a227; box-shadow: 0 8px 20px rgba(201, 162, 39, 0.35); margin-bottom: 6px; }
+
   .tease {
     min-height: 26px;
     font-size: 15px;
@@ -402,6 +405,17 @@
       <details class="letter"><summary>افتحي لما تكوني ضايجة 😔</summary><p>تذكري إنك أقوى وحدة بعرفها، وإنو هاد اليوم رح يعدّي، وأنا جنبك فيه خطوة بخطوة 🌸</p></details>
       <details class="letter"><summary>افتحي لما تكوني مش جايك نوم 🌙</summary><p>سكّري عيونك وتخيلي إنا قاعدين عالبحر بآخر النهار… وتصبحي على خير يا أحلى نوارة ✨</p></details>
     </div>
+    <button class="btn" data-go="p10">كمّلي 💕</button>
+  </div>
+</section>
+
+<!-- page 10: the certificate -->
+<section class="page" id="p10">
+  <div class="card">
+    <h2>وهاي شهادتك الرسمية 📜</h2>
+    <img class="cert" id="cert" alt="شهادة أحلى زوجة بالعالم">
+    <a class="btn wa-like" id="certDownload" download="شهادة-أحلى-زوجة.png">نزّلي الشهادة ⬇️</a>
+    <p class="hint">أو اضغطي مطوّل عالصورة واحفظيها</p>
     <button class="btn" data-go="p4">كمّلي 💕</button>
   </div>
 </section>
@@ -431,6 +445,7 @@
     document.querySelectorAll('[data-escapes]').forEach(b => b.dataset.left = b.dataset.escapes);
     if (id === 'p5') confetti();
     if (id === 'p8') setupScratch();
+    if (id === 'p10') drawCertificate();
     if (id === 'p1b') resetNo();
   }
   document.querySelectorAll('[data-go]').forEach(b =>
@@ -643,6 +658,77 @@
       cv.addEventListener('pointerup', done);
       cv.addEventListener('pointercancel', done);
     });
+  }
+
+  // ---- certificate: drawn on a canvas so she can save it as an image ----
+  async function drawCertificate() {
+    const img = document.getElementById('cert');
+    if (img.src) return;
+    await Promise.all([
+      document.fonts.load('700 80px "Aref Ruqaa"'),
+      document.fonts.load('800 40px Cairo'),
+      document.fonts.load('400 40px Cairo'),
+    ]).catch(() => {});
+
+    const W = 1080, H = 1400;
+    const cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d');
+    const gold = '#c9a227', pink = '#c22f62', ink = '#5a1a33';
+
+    // paper
+    const bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, '#fffaf2'); bg.addColorStop(1, '#ffeef4');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // double frame
+    ctx.strokeStyle = gold; ctx.lineWidth = 14;
+    ctx.strokeRect(40, 40, W - 80, H - 80);
+    ctx.strokeStyle = pink; ctx.lineWidth = 4;
+    ctx.strokeRect(72, 72, W - 144, H - 144);
+
+    ctx.textAlign = 'center'; ctx.direction = 'rtl'; ctx.textBaseline = 'middle';
+    const text = (t, y, font, color) => { ctx.font = font; ctx.fillStyle = color; ctx.fillText(t, W / 2, y); };
+
+    // corners
+    ctx.font = '56px sans-serif';
+    [[130, 130], [W - 130, 130], [130, H - 130], [W - 130, H - 130]].forEach(([x, y]) => ctx.fillText('💖', x, y));
+
+    text('👑', 220, '110px sans-serif', ink);
+    text('شهادة تقدير', 370, '700 110px "Aref Ruqaa", serif', pink);
+    text('تُمنح هذه الشهادة بكل فخر إلى', 500, '400 40px Cairo, sans-serif', ink);
+    text('نوارتي', 630, '700 150px "Aref Ruqaa", serif', gold);
+
+    // ribbon with the title
+    ctx.fillStyle = pink;
+    ctx.beginPath(); ctx.roundRect(150, 740, W - 300, 110, 55); ctx.fill();
+    text('أحلى زوجة بالعالم', 797, '800 58px Cairo, sans-serif', '#fff');
+
+    text('تقديراً لضحكتها اللي بتنوّر الدنيا،', 930, '400 38px Cairo, sans-serif', ink);
+    text('وقلبها الأبيض، وصبرها عليّ 😅', 990, '400 38px Cairo, sans-serif', ink);
+
+    // date (right) and signature (left)
+    ctx.font = '400 32px Cairo, sans-serif'; ctx.fillStyle = ink;
+    ctx.fillText('التاريخ', W - 260, 1120);
+    ctx.fillText('التوقيع', 260, 1120);
+    ctx.font = '800 36px Cairo, sans-serif'; ctx.fillStyle = pink;
+    ctx.fillText('29-10-2026', W - 260, 1175);
+    ctx.fillText('زوجك اللي بحبك 💍', 260, 1175);
+    ctx.strokeStyle = gold; ctx.lineWidth = 3;
+    [[W - 400, W - 120], [120, 400]].forEach(([a, b]) => { ctx.beginPath(); ctx.moveTo(a, 1210); ctx.lineTo(b, 1210); ctx.stroke(); });
+
+    // seal
+    ctx.fillStyle = gold;
+    ctx.beginPath(); ctx.arc(W / 2, 1160, 90, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(W / 2, 1160, 74, 0, Math.PI * 2); ctx.stroke();
+    text('معتمدة', 1140, '800 30px Cairo, sans-serif', '#fff');
+    text('💖', 1190, '36px sans-serif', '#fff');
+
+    const url = cv.toDataURL('image/png');
+    img.src = url;
+    document.getElementById('certDownload').href = url;
   }
 
   // ---- confetti ----
