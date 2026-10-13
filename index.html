@@ -202,6 +202,15 @@
   .cert { width: 100%; border-radius: 12px; box-shadow: 0 10px 24px rgba(194, 47, 98, 0.25); margin-bottom: 14px; display: block; }
   .wa-like { display: inline-block; text-decoration: none; background: #c9a227; box-shadow: 0 8px 20px rgba(201, 162, 39, 0.35); margin-bottom: 6px; }
 
+  .custom { display: flex; gap: 8px; }
+  .custom[hidden] { display: none; }
+  .custom input {
+    flex: 1; min-width: 0; font-family: inherit; font-size: 17px; color: var(--ink);
+    border: 2px solid var(--accent); border-radius: 16px; padding: 10px 14px;
+    background: #fff; outline: none;
+  }
+  .custom .btn { padding: 10px 18px; }
+
   #wish {
     width: 100%; font-family: inherit; font-size: 17px; color: var(--ink);
     border: 2px solid #ffc2d5; border-radius: 16px; padding: 12px 14px;
@@ -273,6 +282,11 @@
     <div class="options" data-key="المطعم" data-next="p3">
       <button class="btn option pick">مطعم براح</button>
       <button class="btn option pick">تل البرية 🌿</button>
+      <button class="btn option custom-toggle">غير هيك ✍️</button>
+      <div class="custom" hidden>
+        <input type="text" placeholder="اكتبي اسم المطعم…">
+        <button class="btn">تمام</button>
+      </div>
     </div>
     <div class="tease"></div>
   </div>
@@ -288,6 +302,11 @@
       <button class="btn option pick">كبدة جاج</button>
       <button class="btn option pick">سلطة فروتي</button>
       <button class="btn option pick">جميع ما ذكر</button>
+      <button class="btn option custom-toggle">غير هيك ✍️</button>
+      <div class="custom" hidden>
+        <input type="text" placeholder="اكتبي شو نفسك تاكلي…">
+        <button class="btn">تمام</button>
+      </div>
     </div>
     <div class="tease"></div>
   </div>
@@ -553,11 +572,42 @@
     btn.addEventListener('click', () => {
       const group = btn.closest('.options');
       group.querySelectorAll('.pick').forEach(b => b.classList.toggle('selected', b === btn));
+      const box = group.querySelector('.custom');
+      if (box) { box.hidden = true; group.querySelector('.custom-toggle').classList.remove('selected'); }
       choices[group.dataset.key] = btn.textContent;
       btn.closest('.card').querySelector('.tease').textContent = 'اختيار موفق 😍✨';
       updateWhatsApp();
       setTimeout(() => go(group.dataset.next), 900);
     });
+  });
+
+  // ---- "something else": she writes her own answer ----
+  document.querySelectorAll('.custom-toggle').forEach(t => {
+    t.addEventListener('click', () => {
+      const group = t.closest('.options');
+      group.querySelectorAll('.pick').forEach(b => b.classList.remove('selected'));
+      t.classList.add('selected');
+      const box = group.querySelector('.custom');
+      box.hidden = false;
+      box.querySelector('input').focus();
+    });
+  });
+  document.querySelectorAll('.custom').forEach(box => {
+    const input = box.querySelector('input');
+    const submit = () => {
+      const group = box.closest('.options');
+      const tease = box.closest('.card').querySelector('.tease');
+      const value = input.value.trim();
+      if (!value) { tease.textContent = 'اكتبي شو بدك 🥺'; return; }
+      choices[group.dataset.key] = value;
+      tease.textContent = 'اختيار موفق 😍✨';
+      updateWhatsApp();
+      input.blur();
+      setTimeout(() => go(group.dataset.next), 900);
+    };
+    box.querySelector('.btn').addEventListener('click', submit);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+    input.addEventListener('input', () => box.closest('.card').querySelector('.tease').textContent = '');
   });
 
   // ---- whatsapp: she sends her answers back ----
