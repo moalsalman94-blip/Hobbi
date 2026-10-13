@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>كل عام وانتي بخير 💖</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg1: #ffe4ec;
+    --bg2: #ffd1e0;
+    --ink: #5a1a33;
+    --accent: #e8457a;
+    --accent-dark: #c22f62;
+    --card: rgba(255, 255, 255, 0.9);
+    --soft: #fff5f8;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: "Cairo", system-ui, sans-serif;
+    color: var(--ink);
+    background: linear-gradient(160deg, var(--bg1), var(--bg2));
+    overflow: hidden;
+    min-height: 100dvh;
+  }
+
+  /* floating hearts in the background */
+  .hearts { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+  .hearts span {
+    position: absolute; bottom: -40px;
+    animation: rise linear infinite;
+    opacity: 0.7;
+  }
+  @keyframes rise {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+    10%  { opacity: 0.8; }
+    100% { transform: translateY(-110vh) rotate(25deg); opacity: 0; }
+  }
+
+  .page {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+    z-index: 1;
+    opacity: 0; visibility: hidden;
+    transform: scale(0.96);
+    transition: opacity .5s ease, transform .5s ease, visibility .5s;
+  }
+  /* transform must be none here, or the escaped (position: fixed) buttons get positioned relative to the page */
+  .page.active { opacity: 1; visibility: visible; transform: none; }
+
+  .card {
+    width: 100%; max-width: 440px;
+    background: var(--card);
+    border-radius: 28px;
+    padding: 32px 22px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(194, 47, 98, 0.18);
+  }
+
+  .emoji-big { font-size: 64px; line-height: 1; margin-bottom: 8px; animation: bounce 2s ease-in-out infinite; }
+  @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+  h1 {
+    font-family: "Aref Ruqaa", serif;
+    color: var(--accent-dark);
+    font-size: 40px;
+    margin: 6px 0 4px;
+    line-height: 1.4;
+  }
+  h2 { font-size: 22px; margin: 4px 0 18px; line-height: 1.6; font-weight: 800; }
+  p  { font-size: 17px; line-height: 1.9; margin: 0 0 14px; }
+  .date {
+    display: inline-block;
+    background: var(--soft);
+    color: var(--accent-dark);
+    border-radius: 999px;
+    padding: 4px 14px;
+    font-weight: 800;
+    direction: ltr;
+    margin-bottom: 18px;
+  }
+
+  .btn {
+    font-family: inherit;
+    font-size: 18px; font-weight: 800;
+    border: none; cursor: pointer;
+    border-radius: 18px;
+    padding: 14px 22px;
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(232, 69, 122, 0.35);
+    transition: transform .15s ease, background .2s ease;
+    touch-action: manipulation;
+    user-select: none; -webkit-user-select: none;
+  }
+  .btn:active { transform: scale(0.96); }
+
+  .options { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+  .option {
+    background: #fff;
+    color: var(--ink);
+    border: 2px solid #ffc2d5;
+    box-shadow: 0 6px 14px rgba(232, 69, 122, 0.12);
+  }
+  .option.selected { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* the naughty runaway buttons */
+  .runaway.escaped {
+    position: fixed;
+    z-index: 50;
+    transition: left .25s ease, top .25s ease;
+    width: auto;
+  }
+  .tease {
+    min-height: 26px;
+    font-size: 15px;
+    color: var(--accent-dark);
+    font-weight: 600;
+    margin-top: 12px;
+  }
+</style>
+</head>
+<body>
+
+<div class="hearts" id="hearts"></div>
+
+<!-- page 1: the greeting -->
+<section class="page active" id="p1">
+  <div class="card">
+    <div class="emoji-big">🎂</div>
+    <h1>كل عام وانتي بخير يا نوارتي</h1>
+    <p>
+      يا أحلى شي صار بحياتي 💕<br>
+      عقبال مية سنة وانتي بتضحكي، وانتي منورة دنيتي،
+      وانا جنبك بكل يوم وبكل لحظة.
+    </p>
+    <p>كل سنة وانتي الأحلى والأغلى 🌸</p>
+    <button class="btn" data-go="p2">في إشي إلك… كبسي هون 🎁</button>
+  </div>
+</section>
+
+<!-- page 2: where to have dinner -->
+<section class="page" id="p2">
+  <div class="card">
+    <div class="emoji-big">🍽️</div>
+    <h2>وين حابة تتعشي بهاليوم الحلو؟</h2>
+    <div class="date">29-10-2026</div>
+    <div class="options">
+      <button class="btn option runaway">مطعم براح</button>
+      <button class="btn option" data-go="p3">تل البرية 🌿</button>
+    </div>
+    <div class="tease"></div>
+  </div>
+</section>
+
+<!-- page 3: what to eat -->
+<section class="page" id="p3">
+  <div class="card">
+    <div class="emoji-big">😋</div>
+    <h2>شو بتحبي توكلي؟</h2>
+    <div class="options" id="food">
+      <button class="btn option pick">رقبة محشية</button>
+      <button class="btn option pick">كبدة جاج</button>
+      <button class="btn option pick">سلطة فروتي</button>
+      <button class="btn option runaway">جميع ما ذكر</button>
+    </div>
+    <div class="tease"></div>
+  </div>
+</section>
+
+<script>
+  // ---- floating hearts ----
+  const heartsBox = document.getElementById('hearts');
+  const heartChars = ['💖', '💕', '🌸', '💗', '✨'];
+  for (let i = 0; i < 18; i++) {
+    const s = document.createElement('span');
+    s.textContent = heartChars[i % heartChars.length];
+    s.style.left = Math.random() * 100 + 'vw';
+    s.style.fontSize = 14 + Math.random() * 18 + 'px';
+    s.style.animationDuration = 8 + Math.random() * 10 + 's';
+    s.style.animationDelay = -Math.random() * 15 + 's';
+    heartsBox.appendChild(s);
+  }
+
+  // ---- page navigation ----
+  function go(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === id));
+    // bring back any escaped buttons so they start in place on revisit
+    document.querySelectorAll('.runaway.escaped').forEach(b => {
+      b.classList.remove('escaped');
+      b.style.left = b.style.top = '';
+    });
+  }
+  document.querySelectorAll('[data-go]').forEach(b =>
+    b.addEventListener('click', () => go(b.dataset.go))
+  );
+
+  // ---- runaway buttons ----
+  const teases = [
+    'هههه لا لا 😜',
+    'مش هيك 🙈',
+    'جربي كمان مرة 😂',
+    'بعيييد عنك 🏃‍♀️',
+    'ولا بتلحقيه 😝',
+    'قربي كمان شوي… 😏',
+  ];
+
+  function escape(btn) {
+    const card = btn.closest('.card');
+    const tease = card.querySelector('.tease');
+    const rect = btn.getBoundingClientRect();
+
+    if (!btn.classList.contains('escaped')) {
+      // pin it where it is first, so it slides away from its spot
+      btn.style.width = rect.width + 'px';
+      btn.style.left = rect.left + 'px';
+      btn.style.top = rect.top + 'px';
+      btn.classList.add('escaped');
+      btn.offsetHeight; // force layout so the slide animates
+    }
+
+    const pad = 16;
+    const maxX = window.innerWidth - rect.width - pad;
+    const maxY = window.innerHeight - rect.height - pad;
+    // never land on top of the other buttons, so she can still tap them
+    const others = [...card.querySelectorAll('.btn')]
+      .filter(b => b !== btn)
+      .map(b => b.getBoundingClientRect());
+    const gap = 12;
+    const overlaps = (x, y) => others.some(o =>
+      x < o.right + gap && x + rect.width > o.left - gap &&
+      y < o.bottom + gap && y + rect.height > o.top - gap);
+
+    let x, y, tries = 0;
+    // pick a free spot that's clearly away from where it was
+    do {
+      x = pad + Math.random() * Math.max(0, maxX - pad);
+      y = pad + Math.random() * Math.max(0, maxY - pad);
+      tries++;
+    } while ((overlaps(x, y) || Math.hypot(x - rect.left, y - rect.top) < 120) && tries < 100);
+
+    btn.style.left = x + 'px';
+    btn.style.top = y + 'px';
+    tease.textContent = teases[Math.floor(Math.random() * teases.length)];
+  }
+
+  document.querySelectorAll('.runaway').forEach(btn => {
+    const run = e => { e.preventDefault(); e.stopPropagation(); escape(btn); };
+    btn.addEventListener('mouseenter', run);   // desktop: runs before she reaches it
+    btn.addEventListener('touchstart', run, { passive: false }); // phone: runs on touch
+    btn.addEventListener('pointerdown', run);
+    btn.addEventListener('click', run);        // just in case a click slips through
+  });
+
+  // ---- food picks (next step comes later) ----
+  document.querySelectorAll('.pick').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.pick').forEach(b => b.classList.toggle('selected', b === btn));
+      btn.closest('.card').querySelector('.tease').textContent = 'اختيار موفق 😍✨';
+    });
+  });
+</script>
+</body>
+</html>
