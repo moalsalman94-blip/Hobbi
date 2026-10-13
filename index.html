@@ -42,8 +42,9 @@
 
   .page {
     position: fixed; inset: 0;
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
     padding: 16px;
+    overflow-y: auto;
     z-index: 1;
     opacity: 0; visibility: hidden;
     transform: scale(0.96);
@@ -54,6 +55,7 @@
 
   .card {
     width: 100%; max-width: 440px;
+    margin: auto;
     background: var(--card);
     border-radius: 28px;
     padding: 32px 22px;
@@ -118,6 +120,37 @@
   .gift { font-size: 20px; padding: 16px 28px; animation: pulse 1.6s ease-in-out infinite; }
   @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
 
+  .photo {
+    display: block;
+    width: 100%; max-height: 42vh;
+    object-fit: cover; object-position: top;
+    border-radius: 20px;
+    border: 5px solid #fff;
+    box-shadow: 0 10px 24px rgba(194, 47, 98, 0.25);
+    margin: 6px 0 18px;
+    transform: rotate(-2deg);
+  }
+
+  .countdown { display: flex; justify-content: center; gap: 8px; margin: 4px 0 18px; }
+  .countdown div {
+    background: var(--soft);
+    border-radius: 14px;
+    padding: 6px 4px;
+    min-width: 62px;
+  }
+  .countdown b { display: block; font-size: 22px; color: var(--accent-dark); line-height: 1.3; }
+  .countdown small { font-size: 12px; }
+  .label { font-size: 15px; font-weight: 600; margin: 0 0 6px; }
+
+  .wa { background: #25d366; box-shadow: 0 8px 20px rgba(37, 211, 102, 0.35); text-decoration: none; display: inline-block; }
+
+  .confetti {
+    position: fixed; top: -40px; z-index: 100;
+    pointer-events: none;
+    animation: fall linear forwards;
+  }
+  @keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
+
   .tease {
     min-height: 26px;
     font-size: 15px;
@@ -151,10 +184,12 @@
   <div class="card">
     <div class="emoji-big">🍽️</div>
     <h2>وين حابة تتعشي بهاليوم الحلو؟</h2>
-    <div class="date">29-10-2026</div>
-    <div class="options">
-      <button class="btn option" data-go="p3">مطعم براح</button>
-      <button class="btn option" data-go="p3">تل البرية 🌿</button>
+    <div class="date">29-10-2026 · 6:00 مساءً</div>
+    <p class="label">باقي على عشانا:</p>
+    <div class="countdown"></div>
+    <div class="options" data-key="المطعم" data-next="p3">
+      <button class="btn option pick">مطعم براح</button>
+      <button class="btn option pick">تل البرية 🌿</button>
     </div>
     <div class="tease"></div>
   </div>
@@ -165,11 +200,27 @@
   <div class="card">
     <div class="emoji-big">😋</div>
     <h2>شو بتحبي توكلي؟</h2>
-    <div class="options" id="food">
+    <div class="options" data-key="الأكل" data-next="p3b">
       <button class="btn option pick">رقبة محشية</button>
       <button class="btn option pick">كبدة جاج</button>
       <button class="btn option pick">سلطة فروتي</button>
       <button class="btn option pick">جميع ما ذكر</button>
+    </div>
+    <div class="tease"></div>
+  </div>
+</section>
+
+<!-- page 3b: what to wear -->
+<section class="page" id="p3b">
+  <div class="card">
+    <div class="emoji-big">👗</div>
+    <h2>وشو رح تلبسي؟</h2>
+    <div class="options" data-key="اللبس" data-next="p4">
+      <button class="btn option pick">فستان 👗</button>
+      <button class="btn option pick">عباية 🖤</button>
+      <button class="btn option pick">جينز وكاجوال 👖</button>
+      <button class="btn option pick">خليها مفاجأة 🤫</button>
+      <button class="btn option runaway">البيجاما 😴</button>
     </div>
     <div class="tease"></div>
   </div>
@@ -197,7 +248,10 @@
   <div class="card">
     <div class="emoji-big">😏</div>
     <h1>بتشوفيها عالواقع أحلى</h1>
-    <p>💝</p>
+    <img class="photo" src="photo.jpg" alt="إحنا 💝">
+    <p class="label">نشوفك بعد:</p>
+    <div class="countdown"></div>
+    <a class="btn wa" id="wa" target="_blank" rel="noopener">ابعتيلي اختياراتك 💌</a>
   </div>
 </section>
 
@@ -224,6 +278,7 @@
       b.style.left = b.style.top = '';
     });
     document.querySelectorAll('[data-escapes]').forEach(b => b.dataset.left = b.dataset.escapes);
+    if (id === 'p5') confetti();
   }
   document.querySelectorAll('[data-go]').forEach(b =>
     b.addEventListener('click', () => go(b.dataset.go))
@@ -305,14 +360,63 @@
     btn.addEventListener('click', run);        // just in case a click slips through
   });
 
-  // ---- food picks ----
+  // ---- picks: remember her answer, then move on ----
+  const choices = {};
   document.querySelectorAll('.pick').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.pick').forEach(b => b.classList.toggle('selected', b === btn));
+      const group = btn.closest('.options');
+      group.querySelectorAll('.pick').forEach(b => b.classList.toggle('selected', b === btn));
+      choices[group.dataset.key] = btn.textContent;
       btn.closest('.card').querySelector('.tease').textContent = 'اختيار موفق 😍✨';
-      setTimeout(() => go('p4'), 900);
+      updateWhatsApp();
+      setTimeout(() => go(group.dataset.next), 900);
     });
   });
+
+  // ---- whatsapp: she sends her answers back ----
+  function updateWhatsApp() {
+    const lines = Object.entries(choices).map(([k, v]) => `${k}: ${v}`);
+    const text = ['نوارتك اختارت 💖', ...lines, 'نشوفك 29-10 الساعة 6 😍'].join('\n');
+    document.getElementById('wa').href = 'https://wa.me/962787727783?text=' + encodeURIComponent(text);
+  }
+  updateWhatsApp();
+
+  // ---- countdown to dinner (Jordan time) ----
+  const dinner = new Date('2026-10-29T18:00:00+03:00');
+  function tick() {
+    const ms = dinner - Date.now();
+    let html;
+    if (ms <= 0) {
+      html = '<div><b>هلأ وقتها! 🥳</b></div>';
+    } else {
+      const parts = [
+        [Math.floor(ms / 864e5), 'يوم'],
+        [Math.floor(ms / 36e5) % 24, 'ساعة'],
+        [Math.floor(ms / 6e4) % 60, 'دقيقة'],
+        [Math.floor(ms / 1e3) % 60, 'ثانية'],
+      ];
+      html = parts.map(([n, l]) => `<div><b>${n}</b><small>${l}</small></div>`).join('');
+    }
+    document.querySelectorAll('.countdown').forEach(c => c.innerHTML = html);
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  // ---- confetti ----
+  function confetti() {
+    const bits = ['🎉', '💖', '🎊', '💕', '✨', '🌸', '🎈'];
+    for (let i = 0; i < 70; i++) {
+      const c = document.createElement('span');
+      c.className = 'confetti';
+      c.textContent = bits[i % bits.length];
+      c.style.left = Math.random() * 100 + 'vw';
+      c.style.fontSize = 16 + Math.random() * 18 + 'px';
+      c.style.animationDuration = 2.5 + Math.random() * 2.5 + 's';
+      c.style.animationDelay = Math.random() * 1.2 + 's';
+      document.body.appendChild(c);
+      c.addEventListener('animationend', () => c.remove());
+    }
+  }
 </script>
 </body>
 </html>
