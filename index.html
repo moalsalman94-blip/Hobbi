@@ -115,6 +115,9 @@
     transition: left .25s ease, top .25s ease;
     width: auto;
   }
+  .gift { font-size: 20px; padding: 16px 28px; animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+
   .tease {
     min-height: 26px;
     font-size: 15px;
@@ -172,6 +175,32 @@
   </div>
 </section>
 
+<!-- page 4: the gift -->
+<section class="page" id="p4">
+  <div class="card">
+    <div class="emoji-big">🎁</div>
+    <p>
+      صح إنك بنت أصول وبدك هدية عمرة هاي السنة 🤍<br>
+      بس برضو ما بهونلي ما أجيب هدية…
+    </p>
+    <p>
+      عشان هيك قررت أجيبلك هدية صغنونة،
+      بس متأكد إنك رح تحبيها 😌
+    </p>
+    <button class="btn gift runaway" data-escapes="5" data-then="p5">افتحي هديتك 🎁</button>
+    <div class="tease"></div>
+  </div>
+</section>
+
+<!-- page 5: the reveal -->
+<section class="page" id="p5">
+  <div class="card">
+    <div class="emoji-big">😏</div>
+    <h1>بتشوفيها عالواقع أحلى</h1>
+    <p>💝</p>
+  </div>
+</section>
+
 <script>
   // ---- floating hearts ----
   const heartsBox = document.getElementById('hearts');
@@ -194,6 +223,7 @@
       b.classList.remove('escaped');
       b.style.left = b.style.top = '';
     });
+    document.querySelectorAll('[data-escapes]').forEach(b => b.dataset.left = b.dataset.escapes);
   }
   document.querySelectorAll('[data-go]').forEach(b =>
     b.addEventListener('click', () => go(b.dataset.go))
@@ -249,18 +279,38 @@
   }
 
   document.querySelectorAll('.runaway').forEach(btn => {
-    const run = e => { e.preventDefault(); e.stopPropagation(); escape(btn); };
+    // data-escapes="N": runs away N times, then gives in and goes to data-then
+    const limited = btn.dataset.escapes !== undefined;
+    if (limited) btn.dataset.left = btn.dataset.escapes;
+    let last = 0;
+    const run = e => {
+      const now = Date.now();
+      if (limited && Number(btn.dataset.left) <= 0) {
+        // ignore the click that belongs to the same tap as the last escape
+        if (e.type === 'click' && now - last > 400) go(btn.dataset.then);
+        return;
+      }
+      e.preventDefault(); e.stopPropagation();
+      // one tap fires touchstart + pointerdown + click; count it as a single escape
+      if (now - last < 400) return;
+      last = now;
+      escape(btn);
+      if (limited && --btn.dataset.left === 0) {
+        btn.closest('.card').querySelector('.tease').textContent = 'خلص خلص، هلأ افتحيها 😅';
+      }
+    };
     btn.addEventListener('mouseenter', run);   // desktop: runs before she reaches it
     btn.addEventListener('touchstart', run, { passive: false }); // phone: runs on touch
     btn.addEventListener('pointerdown', run);
     btn.addEventListener('click', run);        // just in case a click slips through
   });
 
-  // ---- food picks (next step comes later) ----
+  // ---- food picks ----
   document.querySelectorAll('.pick').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.pick').forEach(b => b.classList.toggle('selected', b === btn));
       btn.closest('.card').querySelector('.tease').textContent = 'اختيار موفق 😍✨';
+      setTimeout(() => go('p4'), 900);
     });
   });
 </script>
