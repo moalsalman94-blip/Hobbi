@@ -134,6 +134,77 @@
   .intro-sub { color: #f7e7a1; font-size: 15px; letter-spacing: 1px; animation: fade-in .8s ease 1.3s backwards; }
   @keyframes fade-in { from { opacity: 0; transform: translateY(8px); } }
 
+  /* the big gift-opening show */
+  #giftShow {
+    position: fixed; inset: 0; z-index: 150;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px;
+    background: radial-gradient(circle at 50% 55%, #7a1236, #2a0512 75%);
+    opacity: 0; transition: opacity .4s ease;
+    overflow: hidden;
+  }
+  #giftShow.show { opacity: 1; }
+  #giftShow.done { opacity: 0; transition: opacity .6s ease; }
+  .gs-title {
+    font-family: "Aref Ruqaa", serif; font-size: 38px; z-index: 2;
+    background: linear-gradient(90deg, #b8860b, #fff3c4, #c9a227, #fff3c4, #b8860b);
+    background-size: 300% 100%;
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    animation: text-shine 3s linear infinite;
+  }
+  .gs-stage { position: relative; width: 200px; height: 200px; }
+  .rays {
+    position: absolute; left: 50%; top: 55%; width: 900px; height: 900px; margin: -450px 0 0 -450px;
+    background: repeating-conic-gradient(rgba(255, 228, 140, .32) 0 7deg, transparent 7deg 18deg);
+    -webkit-mask: radial-gradient(circle, #000 10%, transparent 60%); mask: radial-gradient(circle, #000 10%, transparent 60%);
+    transform: scale(0); opacity: 0;
+    transition: transform 1s ease, opacity 1s ease;
+    animation: spin 14s linear infinite;
+  }
+  @keyframes spin { to { rotate: 360deg; } }
+  .glow {
+    position: absolute; left: 50%; top: 60%; width: 20px; height: 20px; margin: -10px;
+    border-radius: 50%; background: #fff3c4;
+    box-shadow: 0 0 60px 30px rgba(255, 220, 120, .9), 0 0 140px 80px rgba(255, 150, 190, .6);
+    transform: scale(0); transition: transform .6s ease;
+  }
+  .gbox {
+    position: absolute; bottom: 10px; left: 25px; width: 150px; height: 115px;
+    background: linear-gradient(135deg, #f0628f, #b01a52);
+    border-radius: 6px;
+    box-shadow: inset -12px -10px 0 rgba(0, 0, 0, .12), 0 20px 40px rgba(0, 0, 0, .45);
+  }
+  .gbox::before, .glid::before {
+    content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 26px; margin-left: -13px;
+    background: linear-gradient(90deg, #b8860b, #fff3c4, #c9a227);
+  }
+  .glid {
+    position: absolute; bottom: 118px; left: 15px; width: 170px; height: 38px;
+    background: linear-gradient(135deg, #ff7aa3, #c22f62);
+    border-radius: 6px; box-shadow: 0 6px 12px rgba(0, 0, 0, .3);
+    transition: transform .9s cubic-bezier(.3, 1.6, .5, 1), opacity .9s ease;
+  }
+  .bow { position: absolute; bottom: 30px; left: 50%; width: 0; height: 0; }
+  .bow i {
+    position: absolute; bottom: 0; width: 46px; height: 32px;
+    border: 7px solid #e6c766; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  }
+  .bow i:first-child { right: 2px; transform: rotate(-25deg); }
+  .bow i:last-child { left: 2px; transform: rotate(25deg); }
+  #giftShow.shake .gs-box { animation: shake .9s ease; }
+  @keyframes shake {
+    10%, 50%, 90% { transform: rotate(-6deg) translateY(-4px); }
+    30%, 70% { transform: rotate(6deg) translateY(-4px); }
+  }
+  .gs-box { position: absolute; inset: 0; animation: drop .7s cubic-bezier(.3, 1.5, .5, 1) backwards; }
+  @keyframes drop { from { transform: translateY(-120vh); } }
+  #giftShow.open .glid { transform: translate(60px, -260px) rotate(35deg); opacity: 0; }
+  #giftShow.open .rays { transform: scale(1); opacity: 1; }
+  #giftShow.open .glow { transform: scale(1.4); }
+  .flash { position: absolute; inset: 0; background: #fffaf0; opacity: 0; pointer-events: none; transition: opacity .35s ease; z-index: 3; }
+  #giftShow.flash .flash { opacity: 1; }
+
+  #fireworks { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 90; }
+
   /* journey progress */
   .progress {
     position: fixed; top: 0; right: 0; left: 0; height: 5px; z-index: 60;
@@ -632,7 +703,7 @@
       b.style.left = b.style.top = '';
     });
     document.querySelectorAll('[data-escapes]').forEach(b => b.dataset.left = b.dataset.escapes);
-    if (id === 'p5') confetti();
+    if (id === 'p5') { confetti(); fireworks(); }
     if (id === 'p8') setupScratch();
     if (id === 'p10') drawCertificate();
     if (id === 'p1b') resetNo();
@@ -699,7 +770,7 @@
       const now = Date.now();
       if (limited && Number(btn.dataset.left) <= 0) {
         // ignore the click that belongs to the same tap as the last escape
-        if (e.type === 'click' && now - last > 400) go(btn.dataset.then);
+        if (e.type === 'click' && now - last > 400) openGift(() => go(btn.dataset.then));
         return;
       }
       e.preventDefault(); e.stopPropagation();
@@ -982,6 +1053,100 @@
       h.addEventListener('animationend', () => h.remove());
     }
   });
+
+  // ---- gift opening show: box drops, shakes, lid flies, light, flash ----
+  let giftPlaying = false;
+  function openGift(then) {
+    if (giftPlaying) return;
+    giftPlaying = true;
+    const el = document.createElement('div');
+    el.id = 'giftShow';
+    el.innerHTML = `
+      <div class="gs-title">جاهزة؟ ✨</div>
+      <div class="gs-stage">
+        <div class="rays"></div>
+        <div class="glow"></div>
+        <div class="gs-box">
+          <div class="gbox"></div>
+          <div class="glid"><div class="bow"><i></i><i></i></div></div>
+        </div>
+      </div>
+      <div class="flash"></div>`;
+    document.body.appendChild(el);
+    const at = (ms, fn) => setTimeout(fn, ms);
+    requestAnimationFrame(() => el.classList.add('show'));
+    at(800, () => el.classList.add('shake'));
+    at(1800, () => { el.classList.add('open'); el.querySelector('.gs-title').textContent = 'يلا… 💛'; });
+    at(3000, () => el.classList.add('flash'));
+    at(3400, () => { then(); el.classList.add('done'); });
+    at(4100, () => { el.remove(); giftPlaying = false; });
+  }
+
+  // ---- fireworks over the final page ----
+  function fireworks(duration = 8000) {
+    const cv = document.createElement('canvas');
+    cv.id = 'fireworks';
+    document.body.appendChild(cv);
+    const ctx = cv.getContext('2d');
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const W = innerWidth, H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr; ctx.scale(dpr, dpr);
+    const colors = ['#ffd86b', '#fff3c4', '#ff7aa8', '#ffffff', '#e8457a', '#f5c542', '#ffb3cb'];
+    const rockets = [], sparks = [];
+    const start = performance.now();
+    let lastLaunch = 0;
+
+    const explode = (x, y) => {
+      const c1 = colors[Math.random() * colors.length | 0], c2 = colors[Math.random() * colors.length | 0];
+      const n = 70 + Math.random() * 40 | 0;
+      const heart = Math.random() < .35; // some bursts come out heart-shaped
+      for (let i = 0; i < n; i++) {
+        const t = (i / n) * Math.PI * 2;
+        let vx, vy;
+        if (heart) {
+          vx = 16 * Math.sin(t) ** 3 / 5;
+          vy = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) / 5;
+        } else {
+          const sp = 1 + Math.random() * 4.5;
+          vx = Math.cos(t) * sp; vy = Math.sin(t) * sp;
+        }
+        sparks.push({ x, y, vx, vy, life: 1, decay: .010 + Math.random() * .012, c: i % 2 ? c1 : c2, r: 1.2 + Math.random() * 1.6 });
+      }
+    };
+
+    (function frame(now) {
+      const elapsed = now - start;
+      if (elapsed < duration && now - lastLaunch > 380) {
+        lastLaunch = now;
+        rockets.push({ x: W * (.15 + Math.random() * .7), y: H + 10, ty: H * (.12 + Math.random() * .33), vy: -(7 + Math.random() * 3) });
+      }
+      // fade the previous frame so sparks leave trails
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fillStyle = 'rgba(0, 0, 0, .22)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = 'lighter';
+
+      for (let i = rockets.length - 1; i >= 0; i--) {
+        const r = rockets[i];
+        r.y += r.vy; r.vy *= .985;
+        ctx.fillStyle = '#fff3c4';
+        ctx.beginPath(); ctx.arc(r.x, r.y, 2.2, 0, Math.PI * 2); ctx.fill();
+        if (r.y <= r.ty || r.vy > -1.5) { explode(r.x, r.y); rockets.splice(i, 1); }
+      }
+      for (let i = sparks.length - 1; i >= 0; i--) {
+        const p = sparks[i];
+        p.x += p.vx; p.y += p.vy; p.vy += .045; p.vx *= .985; p.vy *= .985;
+        p.life -= p.decay;
+        if (p.life <= 0) { sparks.splice(i, 1); continue; }
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.c;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      if (elapsed < duration || rockets.length || sparks.length) requestAnimationFrame(frame);
+      else cv.remove();
+    })(start);
+  }
 
   // ---- confetti ----
   function confetti() {
