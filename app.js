@@ -277,13 +277,6 @@ function paymentDialog(pm, kind, partyId, after) {
 
 /* ---------- الصفحات ---------- */
 function home() {
-  const t = today(), m = t.slice(0, 7);
-  const sum = (kind, pred) => db.invoices.filter(i => i.kind === kind && pred(i.date || '')).reduce((s, i) => s + invTotal(i), 0);
-  const recv = db.parties.filter(p => p.type === 'customer').reduce((s, p) => s + Math.max(0, partyBalance(p)), 0);
-  const payable = db.parties.filter(p => p.type === 'supplier').reduce((s, p) => s + Math.max(0, -partyBalance(p)), 0);
-  const cash = entriesBalance(cashEntries());
-  const c = `<small>${cur()}</small>`;
-
   app.innerHTML = `
     <div class="welcome"><h2>${esc(db.settings.shopName)}</h2></div>
     <div class="tiles">
@@ -292,14 +285,6 @@ function home() {
       <button class="tile receipt" type="button" id="qReceipt"><span class="ic">💵</span>سند قبض</button>
       <button class="tile payment" type="button" id="qPayment"><span class="ic">💸</span>سند صرف</button>
       <a class="tile statement" href="#/statement/all"><span class="ic">📄</span>كشف حساب</a>
-    </div>
-    <div class="stats">
-      <div class="stat"><div class="k">مبيعات اليوم</div><div class="v">${money(sum('sale', d => d === t))} ${c}</div></div>
-      <div class="stat"><div class="k">مبيعات هذا الشهر</div><div class="v">${money(sum('sale', d => d.startsWith(m)))} ${c}</div></div>
-      <div class="stat"><div class="k">مشتريات هذا الشهر</div><div class="v">${money(sum('purchase', d => d.startsWith(m)))} ${c}</div></div>
-      <div class="stat"><div class="k">رصيد الصندوق</div><div class="v">${cashBal(cash)} ${c}</div></div>
-      <div class="stat"><div class="k">ديون لنا على العملاء</div><div class="v owes">${money(recv)} ${c}</div></div>
-      <div class="stat"><div class="k">ديون علينا للموردين</div><div class="v">${money(payable)} ${c}</div></div>
     </div>`;
   $('#qReceipt').onclick = () => paymentDialog(null, 'receipt', '', () => render());
   $('#qPayment').onclick = () => paymentDialog(null, 'payment', '', () => render());
@@ -747,11 +732,61 @@ function statementPage(arg) {
   draw();
 }
 
+/* ----- التقارير ----- */
+const REPORTS = {
+  'sales-today': 'مبيعات اليوم',
+  'sales-month': 'مبيعات هذا الشهر',
+  'purchases-month': 'مشتريات هذا الشهر',
+  'receivables': 'ديون لنا على العملاء',
+  'payables': 'ديون علينا للموردين'
+};
+
+function reportPage(key) {
+  if (!REPORTS[key]) key = 'sales-today';
+  const t = today(), m = t.slice(0, 7);
+  const c = cur();
+  let total = 0, body = '', sub = '';
+
+  if (key === 'receivables' || key === 'payables') {
+    const type = key === 'receivables' ? 'customer' : 'supplier';
+    const sign = type === 'customer' ? 1 : -1;
+    const list = db.parties.filter(p => p.type === type)
+      .map(p => ({ p, b: round(sign * partyBalance(p)) }))
+      .filter(x => x.b > 0.004)
+      .sort((a, b) => b.b - a.b);
+    total = list.reduce((s, x) => s + x.b, 0);
+    sub = `عدد ${PTYPES[type]}: ${list.length}`;
+    body = list.length ? `<div class="table-wrap"><table class="tbl"><thead><tr>
+      <th>${type === 'customer' ? 'العميل' : 'المورد'}</th><th>الهاتف</th><th class="num">${type === 'customer' ? 'المبلغ المستحق عليه' : 'المبلغ المستحق له'}</th><th></th></tr></thead><tbody>
+      ${list.map(({ p, b }) => `<tr class="clickable" data-href="#/statement/${p.id}"><td>${esc(p.name)}</td><td>${esc(p.phone)}</td>
+        <td class="num">${money(b)}</td><td><a class="btn sm" href="#/statement/${p.id}">كشف حساب</a></td></tr>`).join('')}
+      </tbody><tfoot><tr><th colspan="2">الإجمالي</th><th class="num">${money(total)}</th><th></th></tr></tfoot></table></div>`
+      : '<p class="hint">ما في ديون.</p>';
+  } else {
+    const kind = key.startsWith('sales') ? 'sale' : 'purchase';
+    const pred = key === 'sales-today' ? (d => d === t) : (d => (d || '').startsWith(m));
+    const list = db.invoices.filter(i => i.kind === kind && pred(i.date)).sort(byDate).reverse();
+    total = list.reduce((s, i) => s + invTotal(i), 0);
+    sub = key === 'sales-today' ? `تاريخ ${t}` : `شهر ${m}`;
+    body = invoiceTable(list, false);
+  }
+
+  app.innerHTML = `
+    <div class="page-head"><h2>${REPORTS[key]}</h2>
+      <div class="btn-row"><button class="btn" type="button" onclick="print()">🖨️ طباعة</button></div></div>
+    <div class="card">
+      <div class="print-only"><div class="doc-head"><h2>${esc(db.settings.shopName)}</h2><h2>${REPORTS[key]}</h2></div></div>
+      <div class="report-total"><span>${REPORTS[key]}</span><b>${money(total)} <small>${c}</small></b><span class="hint">${sub}</span></div>
+      ${body}
+    </div>`;
+  bindRowLinks();
+}
+
 /* ----- الصندوق ----- */
 function cashPage() {
   const st = cashPage.state || (cashPage.state = { from: '', to: '' });
   app.innerHTML = `
-    <div class="page-head"><h2>حركة الصندوق (الكاش)</h2>
+    <div class="page-head"><h2>رصيد الصندوق</h2>
       <div class="btn-row"><button class="btn primary" type="button" onclick="print()">🖨️ طباعة</button></div></div>
     <div class="card filters">
       <label>من تاريخ<input id="cf" type="date" value="${st.from}"></label>
@@ -889,7 +924,7 @@ function notFound() {
 const routes = {
   home, new: newInvoice, edit: editInvoice, invoice: viewInvoice, invoices: invoicesList,
   payments: paymentsPage, parties: partiesPage, items: itemsPage, statement: statementPage,
-  cash: cashPage, settings: settingsPage
+  cash: cashPage, settings: settingsPage, report: reportPage
 };
 
 function render() {
