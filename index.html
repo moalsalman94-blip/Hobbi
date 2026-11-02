@@ -13,12 +13,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=11">
+  <link rel="stylesheet" href="style.css?v=12">
 </head>
 <body>
   <header class="topbar no-print">
     <button id="menuBtn" class="icon-btn" type="button" aria-label="القائمة" data-ic="menu"></button>
     <a class="brand" href="#/home"><span class="emblem" data-emblem></span><h1 id="shopTitle">مؤسسة طريق القمة</h1></a>
+    <a id="syncDot" class="sync" href="#/settings" hidden><i></i><span></span></a>
   </header>
 
   <nav id="nav" class="no-print">
@@ -44,6 +45,7 @@
   <dialog id="dlg"><form id="dlgForm" novalidate></form></dialog>
   <div id="toast" class="no-print"></div>
 
-  <script src="app.js?v=11"></script>
+  <script src="firebase-config.js?v=12"></script>
+  <script src="app.js?v=12"></script>
 </body>
 </html>

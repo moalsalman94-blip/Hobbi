@@ -14,4 +14,20 @@
 ## التشغيل
 افتح ملف `index.html` بالمتصفح، أو من GitHub Pages.
 
-> البيانات محفوظة بالمتصفح على نفس الجهاز. خذ نسخة احتياطية من صفحة الإعدادات بشكل دوري.
+## المزامنة بين الأجهزة
+البرنامج بيستعمل Firebase (Firestore + Authentication) لحفظ البيانات على السيرفر ومزامنتها بين كل الأجهزة.
+إعدادات المشروع موجودة بملف `firebase-config.js`. إذا كانت `null` البرنامج بيشتغل على الجهاز بس.
+
+قواعد Firestore المقترحة (بدّل الإيميل بإيميل حساب المؤسسة):
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /shops/{shop}/{document=**} {
+      allow read, write: if request.auth != null
+        && request.auth.token.email in ['YOUR-EMAIL@example.com'];
+    }
+  }
+}
+```

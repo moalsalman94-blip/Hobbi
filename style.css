@@ -354,3 +354,44 @@ dialog::backdrop { background: rgba(3, 6, 12, .7); backdrop-filter: blur(4px); -
   .hero .emblem-lg { width: 82px; height: 82px; }
   .tile { min-height: 158px; }
 }
+
+/* ---------- Sync status & login gate ---------- */
+.sync {
+  margin-inline-start: auto; display: inline-flex; align-items: center; gap: 7px;
+  padding: 6px 12px; border-radius: 99px; border: 1px solid var(--line);
+  font-size: .78rem; color: var(--muted); text-decoration: none; max-width: 46vw;
+}
+.sync[hidden] { display: none; }
+.sync span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sync i { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--muted); }
+.sync.ok i { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+.sync.wait i { background: var(--amber); box-shadow: 0 0 8px var(--amber); animation: pulse 1.2s ease-in-out infinite; }
+.sync.off i { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+@media (max-width: 899px) { .sync span { display: none; } .sync { padding: 9px; } }
+@keyframes pulse { 50% { opacity: .35; } }
+
+#gate {
+  position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px;
+  background:
+    radial-gradient(900px 500px at 50% -10%, rgba(212, 175, 55, .16), transparent 60%),
+    var(--bg);
+}
+#gate[hidden] { display: none; }
+.gate-box {
+  width: min(400px, 100%); display: flex; flex-direction: column; gap: 14px; text-align: center;
+  padding: 28px 22px; border-radius: 22px; border: 1px solid var(--line);
+  background: linear-gradient(160deg, #141c2e, #0c1220); box-shadow: 0 30px 80px rgba(0, 0, 0, .6);
+}
+.gate-box .emblem-lg { width: 86px; height: 86px; margin: 0 auto; filter: drop-shadow(0 6px 22px rgba(212, 175, 55, .35)); }
+.gate-box h2 {
+  margin: 0; font-family: "Reem Kufi", "Tajawal", sans-serif; font-size: 1.7rem;
+  background: var(--gold-grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.gate-box label { text-align: right; }
+.gate-box .btn { padding: 12px; font-size: 1.05rem; }
+.gate-box .err { color: var(--danger); min-height: 1em; margin: 0; }
+.spinner {
+  width: 34px; height: 34px; margin: 4px auto; border-radius: 50%;
+  border: 3px solid rgba(212, 175, 55, .2); border-top-color: var(--gold); animation: spin .9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }

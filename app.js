@@ -85,9 +85,14 @@ function loadDb() {
   catch (e) { return blankDb(); }
 }
 
-function save() {
+function saveLocal() {
   try { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
-  catch (e) { alert('تعذّر حفظ البيانات على هذا الجهاز. خذ نسخة احتياطية من الإعدادات.'); }
+  catch (e) { if (!cloud.on) alert('تعذّر حفظ البيانات على هذا الجهاز. خذ نسخة احتياطية من الإعدادات.'); }
+}
+
+function save() {
+  saveLocal();
+  if (cloud.ready) cloudPush();
 }
 
 /* ---------- مسمّيات ---------- */
@@ -810,8 +815,16 @@ function settingsPage() {
       <div class="actions"><button class="btn primary" type="submit">حفظ</button></div>
     </form>
     <div class="card">
+      <h3 style="margin-top:0">المزامنة بين الأجهزة</h3>
+      ${cloud.on ? `
+        <p>الحالة: <b id="syncStatus">${esc(cloud.status || '')}</b></p>
+        ${cloud.user ? `<p class="hint">مسجّل دخول باسم: <span dir="ltr">${esc(cloud.user.email || '')}</span></p>
+        <div class="btn-row"><button class="btn danger" type="button" id="logoutBtn">تسجيل خروج من هذا الجهاز</button></div>` : ''}`
+      : `<p class="hint">المزامنة مش مفعّلة. البيانات محفوظة على هذا الجهاز بس.</p>`}
+    </div>
+    <div class="card">
       <h3 style="margin-top:0">النسخ الاحتياطي</h3>
-      <p class="hint">البيانات محفوظة على هذا الجهاز وهذا المتصفح بس. خذ نسخة احتياطية بشكل دوري، وبتقدر ترجعها على أي جهاز ثاني.</p>
+      <p class="hint">${cloud.on ? 'البيانات محفوظة على السيرفر ومتزامنة بين الأجهزة. برضه خذ نسخة احتياطية كل فترة للأمان.' : 'البيانات محفوظة على هذا الجهاز وهذا المتصفح بس. خذ نسخة احتياطية بشكل دوري، وبتقدر ترجعها على أي جهاز ثاني.'}</p>
       <div class="btn-row">
         <button class="btn primary" type="button" id="exp">تنزيل نسخة احتياطية</button>
         <label class="btn" style="flex-direction:row;color:var(--text)">استرجاع نسخة<input type="file" id="imp" accept="application/json,.json" hidden></label>
@@ -841,6 +854,7 @@ function settingsPage() {
     Object.assign(db.settings, { shopName: f.shopName.value.trim() || 'محلي', currency: f.currency.value.trim(), openingCash: round(num(f.openingCash.value)) });
     save(); toast('تم الحفظ'); render();
   };
+  if ($('#logoutBtn')) $('#logoutBtn').onclick = cloudLogout;
   $('#exp').onclick = () => {
     const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
@@ -911,6 +925,246 @@ function notFound() {
   app.innerHTML = `<div class="card"><p>الصفحة غير موجودة. <a href="#/home">رجوع للرئيسية</a></p></div>`;
 }
 
+/* =========================================================
+   المزامنة بين الأجهزة (Firebase Firestore)
+   كل الأجهزة بتسجل دخول بنفس الحساب وبتشوف نفس البيانات
+   ========================================================= */
+const COLS = ['parties', 'invoices', 'payments'];
+const cloud = { on: false, ready: false, user: null, fs: null, root: null, unsub: [], last: { parties: {}, invoices: {}, payments: {}, settings: '' } };
+const FB_VER = '10.12.2';
+
+// JSON بترتيب ثابت للمفاتيح، للمقارنة
+const stable = v => JSON.stringify(v, (k, val) =>
+  val && typeof val === 'object' && !Array.isArray(val)
+    ? Object.keys(val).sort().reduce((o, key) => (o[key] = val[key], o), {})
+    : val);
+
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    const el = document.createElement('script');
+    el.src = src; el.onload = res; el.onerror = () => rej(new Error(src));
+    document.head.appendChild(el);
+  });
+}
+
+function setSync(state, text) {
+  const el = $('#syncDot');
+  if (!el) return;
+  el.hidden = false;
+  el.className = 'sync ' + state;
+  el.title = text;
+  el.querySelector('span').textContent = text;
+  cloud.status = text;
+  const st = $('#syncStatus');
+  if (st) st.textContent = text;
+}
+
+function showGate(mode) {
+  let g = $('#gate');
+  if (!g) { g = document.createElement('div'); g.id = 'gate'; document.body.appendChild(g); }
+  const head = `${emblem('emblem-lg')}<h2>${esc(db.settings.shopName || 'مؤسسة طريق القمة')}</h2>`;
+  if (mode === 'loading') {
+    g.innerHTML = `<div class="gate-box">${head}<p class="hint">جاري تحميل البيانات...</p><div class="spinner"></div></div>`;
+  } else {
+    g.innerHTML = `<form class="gate-box" id="loginForm" novalidate>${head}
+      <p class="hint">سجّل دخول لتشوف بيانات المؤسسة على هذا الجهاز</p>
+      <label>البريد الإلكتروني<input name="email" type="email" autocomplete="username" dir="ltr" required></label>
+      <label>كلمة السر<input name="pass" type="password" autocomplete="current-password" dir="ltr" required></label>
+      <button class="btn primary" type="submit">دخول</button>
+      <p class="hint err" id="loginErr"></p></form>`;
+    $('#loginForm').onsubmit = async e => {
+      e.preventDefault();
+      const f = e.target, btn = $('button', f);
+      btn.disabled = true; $('#loginErr').textContent = '';
+      try { await firebase.auth().signInWithEmailAndPassword(f.email.value.trim(), f.pass.value); }
+      catch (err) {
+        $('#loginErr').textContent = err.code === 'auth/network-request-failed'
+          ? 'ما في إنترنت. تأكد من الاتصال وجرّب مرة ثانية.'
+          : 'الإيميل أو كلمة السر غلط.';
+        btn.disabled = false;
+      }
+    };
+  }
+  g.hidden = false;
+}
+const hideGate = () => { const g = $('#gate'); if (g) g.hidden = true; };
+
+async function cloudInit() {
+  const cfg = window.FIREBASE_CONFIG;
+  if (!cfg) return;
+  cloud.on = true;
+  showGate('loading');
+  setSync('wait', 'جاري الاتصال...');
+  try {
+    if (!window.firebase) {
+      const base = `https://www.gstatic.com/firebasejs/${FB_VER}/`;
+      await loadScript(base + 'firebase-app-compat.js');
+      await Promise.all([loadScript(base + 'firebase-auth-compat.js'), loadScript(base + 'firebase-firestore-compat.js')]);
+    }
+    if (!firebase.apps.length) firebase.initializeApp(cfg);
+    cloud.fs = firebase.firestore();
+    try { await cloud.fs.enablePersistence({ synchronizeTabs: true }); } catch (e) { /* متصفح ما بيدعمها */ }
+    cloud.root = cloud.fs.collection('shops').doc(window.FIREBASE_SHOP_ID || 'main');
+  } catch (e) {
+    console.error(e);
+    cloud.on = false;
+    hideGate();
+    setSync('off', 'المزامنة مش شغالة (ما في إنترنت) — البيانات على هذا الجهاز بس');
+    return;
+  }
+  firebase.auth().onAuthStateChanged(user => {
+    cloud.user = user;
+    if (!user) { cloudStop(); setSync('off', 'غير مسجّل دخول'); showGate('login'); return; }
+    cloudStart();
+  });
+}
+
+function rememberRemote(remote) {
+  for (const c of COLS) cloud.last[c] = Object.fromEntries(remote[c].map(x => [x.id, stable(x)]));
+  cloud.last.settings = stable(remote.settings);
+}
+
+async function cloudStart() {
+  showGate('loading');
+  setSync('wait', 'جاري المزامنة...');
+  try {
+    const [rootSnap, ...snaps] = await Promise.all([cloud.root.get(), ...COLS.map(c => cloud.root.collection(c).get())]);
+    const remote = blankDb();
+    const rs = rootSnap.exists ? rootSnap.data().settings : null;
+    if (rs) remote.settings = { ...remote.settings, ...rs };
+    COLS.forEach((c, i) => { remote[c] = snaps[i].docs.map(d => d.data()); });
+    rememberRemote(remote);
+
+    // أول مرة هذا الجهاز بيرتبط: ضيف بياناته المحلية للبيانات المشتركة
+    const merged = normalizeDb(JSON.parse(JSON.stringify(remote)));
+    const linkKey = 'cloud-linked:' + cloud.user.uid;
+    let linked = false;
+    try { linked = !!localStorage.getItem(linkKey); } catch (e) {}
+    if (!linked) {
+      const remoteEmpty = COLS.every(c => !remote[c].length);
+      const extra = {};
+      let n = 0;
+      for (const c of COLS) { const ids = new Set(remote[c].map(x => x.id)); extra[c] = db[c].filter(x => x && x.id && !ids.has(x.id)); n += extra[c].length; }
+      if (n && (remoteEmpty || confirm(`في ${n} سجل (فواتير وسندات وحسابات) محفوظين على هذا الجهاز بس.\nبدك تضيفهم للبيانات المشتركة؟`))) {
+        for (const c of COLS) merged[c].push(...extra[c]);
+        if (remoteEmpty && !rs) merged.settings = { ...merged.settings, ...db.settings };
+      }
+      try { localStorage.setItem(linkKey, '1'); } catch (e) {}
+    }
+    db = merged;
+    saveLocal();
+    cloud.ready = true;
+    cloudPush();
+    cloudListen();
+    hideGate();
+    render();
+  } catch (e) {
+    console.error(e);
+    hideGate();
+    if (e.code === 'permission-denied') {
+      setSync('off', 'هذا الحساب ما إله صلاحية على البيانات');
+      alert('هذا الحساب ما إله صلاحية على بيانات المؤسسة. تأكد من الإيميل أو من قواعد Firebase.');
+    } else {
+      setSync('off', 'خطأ بالمزامنة — جرّب تحدّث الصفحة');
+    }
+  }
+}
+
+function cloudStop() {
+  cloud.unsub.forEach(u => { try { u(); } catch (e) {} });
+  cloud.unsub = [];
+  cloud.ready = false;
+}
+
+function canRerender() {
+  if ($('#dlg').open) return false;
+  const name = location.hash.replace(/^#\/?/, '').split('/')[0] || 'home';
+  if (['new', 'edit', 'settings'].includes(name)) return false;
+  const a = document.activeElement;
+  return !(a && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName));
+}
+
+function cloudListen() {
+  cloudStop();
+  cloud.ready = true;
+  let timer = null;
+  const changed = () => {
+    saveLocal();
+    clearTimeout(timer);
+    timer = setTimeout(() => { if (canRerender()) render(true); }, 120);
+  };
+  const status = snap => {
+    if (snap.metadata.hasPendingWrites) setSync('wait', 'جاري الحفظ...');
+    else if (snap.metadata.fromCache) setSync('wait', 'بدون إنترنت — بتتزامن لما يرجع النت');
+    else setSync('ok', 'متزامن');
+  };
+  const onErr = e => { console.error(e); setSync('off', 'انقطعت المزامنة — حدّث الصفحة'); };
+
+  for (const c of COLS) {
+    cloud.unsub.push(cloud.root.collection(c).onSnapshot({ includeMetadataChanges: true }, snap => {
+      status(snap);
+      if (!snap.docChanges().length) return;
+      db[c] = snap.docs.map(d => d.data());
+      cloud.last[c] = Object.fromEntries(db[c].map(x => [x.id, stable(x)]));
+      changed();
+    }, onErr));
+  }
+  cloud.unsub.push(cloud.root.onSnapshot(snap => {
+    const rs = snap.exists ? snap.data().settings : null;
+    if (!rs) return;
+    const next = { ...blankDb().settings, ...rs };
+    const js = stable(next);
+    if (js === stable(db.settings)) { cloud.last.settings = js; return; }
+    db.settings = next;
+    cloud.last.settings = js;
+    $('#shopTitle').textContent = next.shopName;
+    changed();
+  }, onErr));
+}
+
+// بيرفع بس اللي تغيّر من آخر مزامنة
+function cloudPush() {
+  if (!cloud.ready || !cloud.root) return;
+  const ops = [];
+  for (const c of COLS) {
+    const col = cloud.root.collection(c), seen = new Set();
+    for (const x of db[c]) {
+      if (!x || !x.id) continue;
+      seen.add(x.id);
+      const js = stable(x);
+      if (cloud.last[c][x.id] !== js) {
+        const data = JSON.parse(js);
+        ops.push(b => b.set(col.doc(x.id), data));
+        cloud.last[c][x.id] = js;
+      }
+    }
+    for (const id of Object.keys(cloud.last[c])) {
+      if (!seen.has(id)) { ops.push(b => b.delete(col.doc(id))); delete cloud.last[c][id]; }
+    }
+  }
+  const sj = stable(db.settings);
+  if (sj !== cloud.last.settings) {
+    const data = JSON.parse(sj);
+    ops.push(b => b.set(cloud.root, { settings: data }, { merge: true }));
+    cloud.last.settings = sj;
+  }
+  for (let i = 0; i < ops.length; i += 400) {
+    const b = cloud.fs.batch();
+    ops.slice(i, i + 400).forEach(f => f(b));
+    b.commit().catch(e => {
+      console.error(e);
+      setSync('off', 'ما انحفظت آخر تعديلات على السيرفر');
+      toast('خطأ بالمزامنة: ' + (e.code || e.message));
+    });
+  }
+}
+
+function cloudLogout() {
+  if (!confirm('بدك تسجّل خروج من هذا الجهاز؟')) return;
+  cloudStop();
+  firebase.auth().signOut();
+}
+
 /* ---------- التوجيه ---------- */
 const routes = {
   home, new: newInvoice, edit: editInvoice, invoice: viewInvoice, invoices: invoicesList,
@@ -918,7 +1172,8 @@ const routes = {
   cash: cashPage, settings: settingsPage, report: reportPage, reports: reportsPage
 };
 
-function render() {
+function render(soft) {
+  soft = soft === true;
   let [name = 'home', arg = ''] = location.hash.replace(/^#\/?/, '').split('/');
   const fn = routes[name] || home;
   const shop = db.settings.shopName || 'مؤسسة طريق القمة';
@@ -936,17 +1191,21 @@ function render() {
     const h = a.getAttribute('href');
     a.classList.toggle('active', h === full || (h === '#/' + name && !navArg));
   });
-  document.body.classList.remove('nav-open');
-  if ($('#dlg').open) $('#dlg').close();
+  if (!soft) {
+    document.body.classList.remove('nav-open');
+    if ($('#dlg').open) $('#dlg').close();
+  }
+  const y = window.scrollY;
   fn(decodeURIComponent(arg));
-  window.scrollTo(0, 0);
+  window.scrollTo(0, soft ? y : 0);
 }
 
 $$('[data-ic]').forEach(el => el.insertAdjacentHTML('afterbegin', icon(el.dataset.ic)));
 $$('[data-emblem]').forEach(el => { el.innerHTML = emblem('emblem'); });
 $('#menuBtn').onclick = () => document.body.classList.toggle('nav-open');
 $('#navShade').onclick = () => document.body.classList.remove('nav-open');
-window.addEventListener('hashchange', render);
-// تحديث الصفحة إذا تغيّرت البيانات من تبويب ثاني
-window.addEventListener('storage', e => { if (e.key === DB_KEY) { db = loadDb(); render(); } });
+window.addEventListener('hashchange', () => render());
+// تحديث الصفحة إذا تغيّرت البيانات من تبويب ثاني (بدون مزامنة)
+window.addEventListener('storage', e => { if (e.key === DB_KEY && !cloud.on) { db = loadDb(); render(true); } });
 render();
+cloudInit();
