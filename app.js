@@ -735,7 +735,6 @@ function reportsPage() {
       ${card('#/report/sales-today', '', 'مبيعات اليوم', money(sum('sale', d => d === t)))}
       ${card('#/report/sales-month', '', 'مبيعات هذا الشهر', money(sum('sale', d => d.startsWith(m))))}
       ${card('#/report/purchases-month', '', 'مشتريات هذا الشهر', money(sum('purchase', d => d.startsWith(m))))}
-      ${card('#/cash', '', 'رصيد الصندوق', cashBal(entriesBalance(cashEntries())))}
       ${card('#/report/receivables', '', 'ديون لنا على العملاء', money(recv), 'owes')}
       ${card('#/report/payables', '', 'ديون علينا للموردين', money(payable))}
     </div>`;
@@ -878,7 +877,6 @@ function settingsPage() {
       <div class="grid">
         <label>اسم المحل<input name="shopName" value="${esc(s.shopName)}"></label>
         <label>العملة<input name="currency" value="${esc(s.currency)}" placeholder="د.أ، ل.س، $ ..."></label>
-        <label>رصيد الصندوق الافتتاحي<input name="openingCash" type="number" step="any" value="${esc(s.openingCash)}"></label>
       </div>
       <div class="actions"><button class="btn primary" type="submit">حفظ</button></div>
     </form>
@@ -920,7 +918,7 @@ function settingsPage() {
   $('#setForm').onsubmit = e => {
     e.preventDefault();
     const f = e.target;
-    Object.assign(db.settings, { shopName: f.shopName.value.trim() || 'محلي', currency: f.currency.value.trim(), openingCash: round(num(f.openingCash.value)) });
+    Object.assign(db.settings, { shopName: f.shopName.value.trim() || 'محلي', currency: f.currency.value.trim(), openingCash: s.openingCash });
     save(); toast('تم الحفظ'); render();
   };
   if ($('#logoutBtn')) $('#logoutBtn').onclick = cloudLogout;
