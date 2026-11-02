@@ -25,6 +25,7 @@ function today() {
 /* ---------- أيقونات ---------- */
 const ICONS = {
   menu: '<path d="M4 7h16M4 12h16M4 17h10"/>',
+  share: '<circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.3 10.8 7.4-4.4M8.3 13.2l7.4 4.4"/>',
   home: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5.5h4V20"/>',
   sale: '<path d="M6 2.8h12v18.4l-2.4-1.6-2.4 1.6-1.2-.8-1.2.8-2.4-1.6L6 21.2z"/><path d="M9 7.5h6M9 11h6M9 14.5h3.5"/>',
   purchase: '<path d="M4.5 8.5h15l-1.3 11.2a1.5 1.5 0 0 1-1.5 1.3H7.3a1.5 1.5 0 0 1-1.5-1.3z"/><path d="M8.5 8.5V7a3.5 3.5 0 0 1 7 0v1.5"/><path d="M9 13h6"/>',
@@ -278,6 +279,7 @@ function paymentDialog(pm, kind, partyId, after) {
       save(); toast('تم الحفظ');
       after && after(pm);
     });
+  comboSelect($('#dlgForm [name=partyId]'));
 }
 
 /* ---------- الصفحات ---------- */
@@ -495,6 +497,7 @@ function invoiceForm(inv, isNew) {
   };
 
   updatePay(inv.partyId || '');
+  comboSelect($('#partySel'));
   renderLines();
 }
 
@@ -506,7 +509,7 @@ function viewInvoice(id) {
   app.innerHTML = `
     <div class="page-head"><h2>فاتورة ${KIND[inv.kind]} رقم ${esc(inv.no)}</h2>
       <div class="btn-row">
-        <button class="btn primary" type="button" onclick="print()">طباعة</button>
+        <button class="btn primary" type="button" data-share>${icon('share')} مشاركة</button><button class="btn" type="button" onclick="print()">طباعة</button>
         <a class="btn" href="#/edit/${inv.id}">تعديل</a>
         ${party && cr ? `<a class="btn" href="#/statement/${party.id}">كشف حساب</a>` : ''}
         <button class="btn danger" type="button" id="delInv">حذف</button>
@@ -544,7 +547,7 @@ function invoicesList(kind) {
   app.innerHTML = `
     <div class="page-head"><h2>فواتير ${kind === 'sale' ? 'البيع' : 'الشراء'}</h2>
       <div class="btn-row"><a class="btn primary" href="#/new/${kind}">فاتورة ${KIND[kind]} جديدة</a>
-      <button class="btn" type="button" onclick="print()">طباعة</button></div></div>
+      <button class="btn primary" type="button" data-share>${icon('share')} مشاركة</button><button class="btn" type="button" onclick="print()">طباعة</button></div></div>
     <div class="card filters">
       <label>بحث<input id="fq" placeholder="اسم الحساب أو رقم الفاتورة"></label>
       <label>من تاريخ<input id="ff" type="date"></label>
@@ -555,7 +558,7 @@ function invoicesList(kind) {
   const draw = () => {
     const q = $('#fq').value.trim(), f = $('#ff').value, t = $('#ft').value, s = $('#fs').value;
     const list = db.invoices.filter(i => i.kind === kind)
-      .filter(i => !q || String(i.no) === q || partyName(i.partyId).includes(q))
+      .filter(i => !q || String(i.no) === q || normName(partyName(i.partyId)).includes(normName(q)))
       .filter(i => (!f || i.date >= f) && (!t || i.date <= t))
       .filter(i => !s || (s === 'credit') === isCredit(i))
       .sort(byDate).reverse();
@@ -574,7 +577,7 @@ function paymentsPage(kind) {
     <div class="page-head"><h2>${kind === 'receipt' ? 'سندات القبض' : 'سندات الصرف'}</h2>
       <div class="btn-row">
         <button class="btn primary" type="button" id="nV">${PAY[kind]} جديد</button>
-        <button class="btn" type="button" onclick="print()">طباعة</button>
+        <button class="btn primary" type="button" data-share>${icon('share')} مشاركة</button><button class="btn" type="button" onclick="print()">طباعة</button>
       </div></div>
     <div class="card filters">
       <label>بحث<input id="pq" placeholder="اسم ${who} أو ملاحظة"></label>
@@ -586,7 +589,7 @@ function paymentsPage(kind) {
     const q = $('#pq').value.trim(), f = $('#pf').value, t = $('#pt').value;
     const list = db.payments
       .filter(p => p.kind === kind)
-      .filter(p => !q || partyName(p.partyId).includes(q) || (p.note || '').includes(q) || String(p.no) === q)
+      .filter(p => !q || normName(partyName(p.partyId)).includes(normName(q)) || normName(p.note).includes(normName(q)) || String(p.no) === q)
       .filter(p => (!f || p.date >= f) && (!t || p.date <= t))
       .sort(byDate).reverse();
     let tot = 0;
@@ -623,14 +626,14 @@ function partiesPage(type) {
   app.innerHTML = `
     <div class="page-head"><h2>${PTYPES[type]}</h2>
       <div class="btn-row"><button class="btn primary" type="button" id="addP">${PTYPE[type]} جديد</button>
-      <button class="btn" type="button" onclick="print()">طباعة</button></div></div>
+      <button class="btn primary" type="button" data-share>${icon('share')} مشاركة</button><button class="btn" type="button" onclick="print()">طباعة</button></div></div>
     <div class="card filters"><label>بحث<input id="sq" placeholder="الاسم أو الهاتف"></label>
       <label>عرض<select id="sf"><option value="">الكل</option><option value="nz">اللي إلهم أو عليهم رصيد</option></select></label></div>
     <div class="card" id="pList"></div>`;
   const draw = () => {
     const q = $('#sq').value.trim(), nz = $('#sf').value === 'nz';
     const list = db.parties.filter(p => p.type === type)
-      .filter(p => !q || p.name.includes(q) || (p.phone || '').includes(q))
+      .filter(p => !q || normName(p.name).includes(normName(q)) || (p.phone || '').includes(q))
       .map(p => ({ p, b: partyBalance(p) }))
       .filter(x => !nz || Math.abs(x.b) > 0.004)
       .sort((a, b) => byName(a.p, b.p));
@@ -673,7 +676,7 @@ function statementPage(arg) {
   const pickLbl = all ? 'العميل أو المورد' : (type === 'customer' ? 'العميل' : 'المورد');
   app.innerHTML = `
     <div class="page-head"><h2>${all && !p ? 'كشف حساب' : 'كشف حساب ' + PTYPE[type]}</h2>
-      <div class="btn-row">${p ? `<button class="btn primary" type="button" onclick="print()">طباعة</button>
+      <div class="btn-row">${p ? `<button class="btn primary" type="button" data-share>${icon('share')} مشاركة</button><button class="btn" type="button" onclick="print()">طباعة</button>
         <button class="btn" type="button" id="stPay">${p.type === 'customer' ? 'سند قبض' : 'سند صرف'}</button>` : ''}</div></div>
     <div class="card filters">
       <label>${pickLbl}<select id="sp"><option value="">— اختر —</option>${partyOptions(partyId, types)}</select></label>
@@ -683,6 +686,7 @@ function statementPage(arg) {
     <div class="card" id="stBody"></div>`;
 
   $('#sp').onchange = e => { location.hash = '#/statement/' + (e.target.value || (all ? 'all' : type)); };
+  comboSelect($('#sp'));
   const draw = () => {
     st.from = $('#sf').value; st.to = $('#stt').value;
     if (!p) {
@@ -690,7 +694,7 @@ function statementPage(arg) {
         : `<p class="hint">لا يوجد ${all ? 'عملاء أو موردين' : PTYPES[type]} بعد.</p>`;
       return;
     }
-    const { html, balance } = statementTable(partyEntries(p), st.from, st.to, { dr: 'مدين (عليه)', cr: 'دائن (له)', bal: partyBal });
+    const { html, balance } = statementTable(partyEntries(p), st.from, st.to, { dr: 'مدين - عليه', cr: 'دائن - له', bal: partyBal });
     const period = st.from || st.to ? `الفترة: ${st.from || 'البداية'} — ${st.to || today()}` : `حتى تاريخ ${today()}`;
     let verdict = 'الحساب مسكّر (الرصيد صفر)';
     if (balance > 0) verdict = `الرصيد المستحق على ${esc(p.name)}: ${money(balance)} ${cur()}`;
@@ -769,7 +773,7 @@ function reportPage(key) {
 
   app.innerHTML = `
     <div class="page-head"><h2>${REPORTS[key]}</h2>
-      <div class="btn-row"><a class="btn" href="#/reports">→ رجوع للتقارير</a><button class="btn" type="button" onclick="print()">طباعة</button></div></div>
+      <div class="btn-row"><a class="btn" href="#/reports">→ رجوع للتقارير</a><button class="btn primary" type="button" data-share>${icon('share')} مشاركة</button><button class="btn" type="button" onclick="print()">طباعة</button></div></div>
     <div class="card">
       <div class="print-only"><div class="doc-head"><h2>${esc(db.settings.shopName)}</h2><h2>${REPORTS[key]}</h2></div></div>
       <div class="report-total"><span>${REPORTS[key]}</span><b>${money(total)} <small>${c}</small></b><span class="hint">${sub}</span></div>
@@ -847,7 +851,7 @@ function cashPage() {
   const st = cashPage.state || (cashPage.state = { from: '', to: '' });
   app.innerHTML = `
     <div class="page-head"><h2>رصيد الصندوق</h2>
-      <div class="btn-row"><a class="btn" href="#/reports">→ رجوع للتقارير</a><button class="btn primary" type="button" onclick="print()">طباعة</button></div></div>
+      <div class="btn-row"><a class="btn" href="#/reports">→ رجوع للتقارير</a><button class="btn primary" type="button" data-share>${icon('share')} مشاركة</button><button class="btn" type="button" onclick="print()">طباعة</button></div></div>
     <div class="card filters">
       <label>من تاريخ<input id="cf" type="date" value="${st.from}"></label>
       <label>إلى تاريخ<input id="ct" type="date" value="${st.to}"></label>
@@ -967,7 +971,7 @@ function settingsPage() {
       ...db.payments.map(v => ({ kind: v.kind, id: v.id, at: v.at, no: v.no, date: v.date, party: partyName(v.partyId),
         label: PAY[v.kind], pay: '', amount: num(v.amount), inv: false }))
     ].filter(r => !t || r.kind === t)
-     .filter(r => !q || r.party.includes(q) || String(r.no) === q)
+     .filter(r => !q || normName(r.party).includes(normName(q)) || String(r.no) === q)
      .sort((a, b) => (b.at || 0) - (a.at || 0));
     $('#logList').innerHTML = rows.length ? `<div class="table-wrap"><table class="tbl"><thead><tr>
       <th>وقت الإدخال</th><th>الحركة</th><th>الرقم</th><th>التاريخ</th><th>الحساب</th><th>الدفع</th><th class="num">المبلغ</th><th></th></tr></thead><tbody>
@@ -1243,6 +1247,143 @@ function cloudLogout() {
   if (!confirm('بدك تسجّل خروج من هذا الجهاز؟')) return;
   cloudStop();
   firebase.auth().signOut();
+}
+
+/* ---------- مشاركة PDF (واتساب وغيره) ---------- */
+function loadVendor() {
+  const jobs = [];
+  if (!window.html2canvas) jobs.push(loadScript('vendor/html2canvas.min.js'));
+  if (!window.jspdf) jobs.push(loadScript('vendor/jspdf.umd.min.js'));
+  return Promise.all(jobs);
+}
+
+function busy(on, text) {
+  let b = $('#busy');
+  if (!b) { b = document.createElement('div'); b.id = 'busy'; b.innerHTML = '<div class="gate-box"><div class="spinner"></div><p></p></div>'; document.body.appendChild(b); }
+  $('p', b).textContent = text || '';
+  b.hidden = !on;
+}
+
+async function shareView() {
+  const title = ($('.page-head h2') || {}).textContent || 'كشف';
+  busy(true, 'جاري تجهيز الملف...');
+  let sheet;
+  try {
+    await loadVendor();
+    // نسخة نظيفة من الصفحة بخلفية بيضاء
+    const clone = app.cloneNode(true);
+    clone.removeAttribute('id');
+    clone.querySelectorAll('.page-head, .filters, .actions, .btn-row, .no-print, button, input, select, datalist, .combo').forEach(e => e.remove());
+    sheet = document.createElement('div');
+    sheet.className = 'pdf-sheet';
+    const dateStr = today();
+    if (!clone.querySelector('.doc-head')) {
+      sheet.innerHTML = `<div class="doc-head"><h2>${esc(db.settings.shopName)}</h2><h2>${esc(title)}</h2></div><p class="pdf-date">التاريخ: ${dateStr}</p>`;
+    }
+    sheet.appendChild(clone);
+    document.body.appendChild(sheet);
+    await (document.fonts ? document.fonts.ready : Promise.resolve());
+
+    const w = sheet.offsetWidth, h = sheet.offsetHeight;
+    const scale = Math.max(1, Math.min(2, Math.sqrt(14e6 / (w * h))));
+    const canvas = await html2canvas(sheet, { scale, backgroundColor: '#ffffff', useCORS: true, logging: false, windowWidth: w, scrollX: 0, scrollY: -window.scrollY });
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'portrait' });
+    const pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight();
+    const sliceH = Math.floor(canvas.width * ph / pw);
+    const part = document.createElement('canvas');
+    part.width = canvas.width;
+    for (let y = 0, page = 0; y < canvas.height; y += sliceH, page++) {
+      const hh = Math.min(sliceH, canvas.height - y);
+      part.height = hh;
+      const ctx = part.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, part.width, hh);
+      ctx.drawImage(canvas, 0, y, canvas.width, hh, 0, 0, canvas.width, hh);
+      if (page) pdf.addPage();
+      pdf.addImage(part.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, pw, hh * pw / canvas.width);
+    }
+    const name = `${title} - ${dateStr}.pdf`.replace(/[\\/:*?"<>|]/g, '-');
+    const file = new File([pdf.output('blob')], name, { type: 'application/pdf' });
+    busy(false);
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], title }); }
+      catch (e) { if (e.name !== 'AbortError') throw e; }
+    } else {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(file); a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      toast('تم تنزيل الملف — ابعته من واتساب');
+    }
+  } catch (e) {
+    console.error(e);
+    busy(false);
+    alert('ما زبط تجهيز الملف. تأكد من الإنترنت وجرّب مرة ثانية.');
+  } finally {
+    if (sheet) sheet.remove();
+  }
+}
+
+document.addEventListener('click', e => {
+  if (e.target.closest('[data-share]')) { e.preventDefault(); shareView(); }
+});
+
+/* ---------- اختيار بالبحث بدل القائمة المنسدلة ---------- */
+function comboSelect(sel) {
+  if (!sel || sel.dataset.combo) return;
+  sel.dataset.combo = '1';
+  const wrap = document.createElement('div');
+  wrap.className = 'combo';
+  sel.parentNode.insertBefore(wrap, sel);
+  wrap.appendChild(sel);
+  sel.classList.add('combo-native');
+  const inp = document.createElement('input');
+  inp.type = 'text'; inp.className = 'combo-input'; inp.autocomplete = 'off'; inp.setAttribute('enterkeyhint', 'done');
+  const list = document.createElement('div');
+  list.className = 'combo-list'; list.hidden = true;
+  wrap.append(inp, list);
+
+  const opts = () => [...sel.options];
+  const sync = () => {
+    const o = sel.options[sel.selectedIndex];
+    inp.value = o && o.value ? o.text : '';
+    const empty = opts().find(x => !x.value);
+    inp.placeholder = '🔍 ' + (empty && !/اختر/.test(empty.text) ? empty.text + ' — أو اكتب للبحث' : 'اكتب الاسم للبحث');
+  };
+  const draw = () => {
+    const q = normName(inp.value);
+    const cur = sel.options[sel.selectedIndex];
+    const typing = q && !(cur && cur.value && normName(cur.text) === q);
+    const items = opts().filter(o => o.value && (!typing || normName(o.text).includes(q)));
+    list.innerHTML = items.length
+      ? items.map(o => {
+          const g = o.parentNode.tagName === 'OPTGROUP' ? `<small>${esc(o.parentNode.label === 'العملاء' ? 'عميل' : 'مورد')}</small>` : '';
+          return `<div class="combo-item${o.selected ? ' sel' : ''}" data-v="${esc(o.value)}"><span>${esc(o.text)}</span>${g}</div>`;
+        }).join('')
+      : '<div class="combo-empty">ما في نتائج</div>';
+    list.hidden = false;
+  };
+  const choose = v => {
+    sel.value = v; sync(); list.hidden = true; inp.blur();
+    sel.dispatchEvent(new Event('change', { bubbles: true }));
+  };
+  inp.addEventListener('focus', () => { draw(); setTimeout(() => inp.select(), 0); });
+  inp.addEventListener('input', draw);
+  ['mousedown', 'pointerdown'].forEach(ev => list.addEventListener(ev, e => e.preventDefault()));
+  list.addEventListener('click', e => { const it = e.target.closest('[data-v]'); if (it) choose(it.dataset.v); });
+  inp.addEventListener('blur', () => setTimeout(() => {
+    list.hidden = true;
+    if (!inp.value.trim() && sel.value) { sel.value = ''; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+    sync();
+  }, 150));
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); const first = list.querySelector('[data-v]'); if (first) choose(first.dataset.v); }
+    if (e.key === 'Escape') { list.hidden = true; inp.blur(); }
+  });
+  new MutationObserver(sync).observe(sel, { childList: true, subtree: true });
+  sel.addEventListener('change', sync);
+  sync();
 }
 
 /* ---------- التوجيه ---------- */
