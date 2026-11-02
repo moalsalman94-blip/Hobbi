@@ -4,33 +4,38 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
   <meta http-equiv="Cache-Control" content="no-cache">
+  <meta name="theme-color" content="#080c14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="طريق القمة">
   <title>مؤسسة طريق القمة</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=10">
+  <link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
   <header class="topbar no-print">
-    <button id="menuBtn" class="icon-btn" type="button" aria-label="القائمة">☰</button>
-    <h1 id="shopTitle">مؤسسة طريق القمة</h1>
+    <button id="menuBtn" class="icon-btn" type="button" aria-label="القائمة" data-ic="menu"></button>
+    <a class="brand" href="#/home"><span class="emblem" data-emblem></span><h1 id="shopTitle">مؤسسة طريق القمة</h1></a>
   </header>
 
   <nav id="nav" class="no-print">
-    <a href="#/home">🏠 الرئيسية</a>
+    <a href="#/home" data-ic="home">الرئيسية</a>
     <div class="nav-sep">العملاء والمبيعات</div>
-    <a href="#/new/sale">➕ فاتورة بيع</a>
-    <a href="#/invoices/sale">🧾 فواتير البيع</a>
-    <a href="#/payments/receipt">💵 سندات القبض</a>
-    <a href="#/parties/customer">👥 العملاء</a>
+    <a href="#/new/sale" data-ic="sale">فاتورة بيع</a>
+    <a href="#/invoices/sale" data-ic="list">فواتير البيع</a>
+    <a href="#/payments/receipt" data-ic="moneyIn">سندات القبض</a>
+    <a href="#/parties/customer" data-ic="users">العملاء</a>
     <div class="nav-sep">الموردين والمشتريات</div>
-    <a href="#/new/purchase">➕ فاتورة شراء</a>
-    <a href="#/invoices/purchase">📦 فواتير الشراء</a>
-    <a href="#/payments/payment">💸 سندات الصرف</a>
-    <a href="#/parties/supplier">🏭 الموردين</a>
+    <a href="#/new/purchase" data-ic="purchase">فاتورة شراء</a>
+    <a href="#/invoices/purchase" data-ic="list">فواتير الشراء</a>
+    <a href="#/payments/payment" data-ic="moneyOut">سندات الصرف</a>
+    <a href="#/parties/supplier" data-ic="truck">الموردين</a>
     <div class="nav-sep">عام</div>
-    <a href="#/reports">📊 التقارير</a>
-    <a href="#/settings">⚙️ الإعدادات</a>
+    <a href="#/reports" data-ic="chart">التقارير</a>
+    <a href="#/settings" data-ic="gear">الإعدادات</a>
   </nav>
   <div id="navShade" class="no-print"></div>
 
@@ -39,6 +44,6 @@
   <dialog id="dlg"><form id="dlgForm" novalidate></form></dialog>
   <div id="toast" class="no-print"></div>
 
-  <script src="app.js?v=10"></script>
+  <script src="app.js?v=11"></script>
 </body>
 </html>

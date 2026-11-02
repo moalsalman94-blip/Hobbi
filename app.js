@@ -22,6 +22,39 @@ function today() {
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 }
 
+/* ---------- أيقونات ---------- */
+const ICONS = {
+  menu: '<path d="M4 7h16M4 12h16M4 17h10"/>',
+  home: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5.5h4V20"/>',
+  sale: '<path d="M6 2.8h12v18.4l-2.4-1.6-2.4 1.6-1.2-.8-1.2.8-2.4-1.6L6 21.2z"/><path d="M9 7.5h6M9 11h6M9 14.5h3.5"/>',
+  purchase: '<path d="M4.5 8.5h15l-1.3 11.2a1.5 1.5 0 0 1-1.5 1.3H7.3a1.5 1.5 0 0 1-1.5-1.3z"/><path d="M8.5 8.5V7a3.5 3.5 0 0 1 7 0v1.5"/><path d="M9 13h6"/>',
+  moneyIn: '<rect x="2.8" y="8.5" width="18.4" height="12" rx="2.2"/><path d="M16.5 14.5h2"/><path d="M12 1.8v5.4"/><path d="m9.6 4.9 2.4 2.4 2.4-2.4"/>',
+  moneyOut: '<rect x="2.8" y="8.5" width="18.4" height="12" rx="2.2"/><path d="M16.5 14.5h2"/><path d="M12 7.2V1.8"/><path d="m9.6 4.1 2.4-2.4 2.4 2.4"/>',
+  ledger: '<path d="M6.5 3h9l4 4v14h-13z"/><path d="M15.5 3v4h4"/><path d="M9.5 11.5h7M9.5 15h7M9.5 18.5h4"/><path d="M4.5 6v15.5"/>',
+  list: '<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.8" cy="6" r=".9"/><circle cx="4.8" cy="12" r=".9"/><circle cx="4.8" cy="18" r=".9"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.8a3.5 3.5 0 0 1 0 6.4"/><path d="M18 14.2a6.5 6.5 0 0 1 3.5 5.8"/>',
+  truck: '<path d="M2.5 6h11v10h-11z"/><path d="M13.5 9.5h4l3.5 3.5V16h-7.5"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
+  chart: '<path d="M3.5 20.5h17"/><rect x="5" y="11" width="3" height="7" rx=".8"/><rect x="10.5" y="6.5" width="3" height="11.5" rx=".8"/><rect x="16" y="13.5" width="3" height="4.5" rx=".8"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'
+};
+const icon = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n] || ''}</svg>`;
+
+let emblemSeq = 0;
+// شعار المؤسسة: قمة جبل وطريق صاعد ونجمة
+function emblem(cls = '') {
+  const g = 'eg' + (++emblemSeq);
+  return `<svg class="${cls}" viewBox="0 0 64 64" aria-hidden="true">
+    <defs><linearGradient id="${g}" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8eab0"/><stop offset=".5" stop-color="#d4af37"/><stop offset="1" stop-color="#a8841f"/></linearGradient></defs>
+    <circle cx="32" cy="32" r="30.5" fill="#0b101b" stroke="url(#${g})" stroke-width="1.5"/>
+    <circle cx="32" cy="32" r="26.5" fill="none" stroke="url(#${g})" stroke-width=".6" opacity=".55"/>
+    <path d="M12.5 45 25 25.5l5.2 7.6L37.5 21 51.5 45z" fill="none" stroke="url(#${g})" stroke-width="2" stroke-linejoin="round"/>
+    <path d="m37.5 21-3 5 1.6-.6 1.4 1.4 1.4-1.4 1.6.6z" fill="url(#${g})"/>
+    <path d="M28 45c3.5-2.6-1.5-4.6 2.4-7.2 2.6-1.7 4.6-3.6 5.6-6.8" fill="none" stroke="url(#${g})" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="1.8 2.2"/>
+    <path d="m37.5 10.5 1.15 2.45 2.7.3-2 1.85.55 2.65-2.4-1.35-2.4 1.35.55-2.65-2-1.85 2.7-.3z" fill="url(#${g})"/>
+  </svg>`;
+}
+
 /* ---------- قاعدة البيانات ---------- */
 function blankDb() {
   return {
@@ -176,7 +209,7 @@ function openDialog(title, body, onSave) {
   };
   $('[data-close]', f).onclick = () => dlg.close();
   dlg.showModal();
-  $('input, select', f)?.focus();
+  if (window.innerWidth >= 900) $('input, select', f)?.focus();
 }
 
 function partyOptions(selected, types = ['customer', 'supplier']) {
@@ -244,14 +277,23 @@ function paymentDialog(pm, kind, partyId, after) {
 
 /* ---------- الصفحات ---------- */
 function home() {
+  const dateStr = new Date().toLocaleDateString('ar', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const tile = (tag, attrs, ic, t, sub, cls) => `<${tag} class="tile ${cls}" ${attrs}>
+      <span class="badge">${icon(ic)}</span><span class="t">${t}</span><span class="s">${sub}</span></${tag}>`;
   app.innerHTML = `
-    <div class="welcome"><h2>${esc(db.settings.shopName)}</h2></div>
+    <section class="hero">
+      ${emblem('emblem-lg')}
+      <h2>${esc(db.settings.shopName)}</h2>
+      <div class="date">${dateStr}</div>
+      <div class="ornament"><span></span><i></i><span></span></div>
+    </section>
     <div class="tiles">
-      <a class="tile purchase" href="#/new/purchase"><span class="ic">📦</span>فاتورة شراء</a>
-      <a class="tile sale" href="#/new/sale"><span class="ic">🧾</span>فاتورة بيع</a>
-      <button class="tile receipt" type="button" id="qReceipt"><span class="ic">💵</span>سند قبض</button>
-      <button class="tile payment" type="button" id="qPayment"><span class="ic">💸</span>سند صرف</button>
-      <a class="tile statement" href="#/statement/all"><span class="ic">📄</span>كشف حساب</a>
+      ${tile('a', 'href="#/new/purchase"', 'purchase', 'فاتورة شراء', 'من المورد', '')}
+      ${tile('a', 'href="#/new/sale"', 'sale', 'فاتورة بيع', 'للعميل', '')}
+      ${tile('button', 'type="button" id="qReceipt"', 'moneyIn', 'سند قبض', 'استلام مبلغ', '')}
+      ${tile('button', 'type="button" id="qPayment"', 'moneyOut', 'سند صرف', 'دفع مبلغ', '')}
+      <a class="tile wide" href="#/statement/all"><span class="badge">${icon('ledger')}</span>
+        <span class="txt"><span class="t">كشف حساب</span><span class="s">أي عميل أو مورد</span></span></a>
     </div>`;
   $('#qReceipt').onclick = () => paymentDialog(null, 'receipt', '', () => render());
   $('#qPayment').onclick = () => paymentDialog(null, 'payment', '', () => render());
@@ -315,13 +357,13 @@ function invoiceForm(inv, isNew) {
       </div>
       <div class="paybox">
         <span class="paylbl">طريقة الدفع</span>
-        <label class="radio"><input type="radio" name="pay" value="cash" ${inv.pay !== 'credit' ? 'checked' : ''}> 💵 نقدي</label>
-        <label class="radio"><input type="radio" name="pay" value="credit" ${inv.pay === 'credit' ? 'checked' : ''}> 📒 ذمم (على الحساب)</label>
+        <label class="radio"><input type="radio" name="pay" value="cash" ${inv.pay !== 'credit' ? 'checked' : ''}> نقدي</label>
+        <label class="radio"><input type="radio" name="pay" value="credit" ${inv.pay === 'credit' ? 'checked' : ''}> ذمم (على الحساب)</label>
       </div>
       <div class="grid">
         <label><span id="partyLbl"></span>
           <select name="partyId" id="partySel"></select></label>
-        <button type="button" class="btn" id="addParty">➕ ${PTYPE[ptype]} جديد</button>
+        <button type="button" class="btn" id="addParty">${PTYPE[ptype]} جديد</button>
       </div>
       <p class="hint" id="payHint"></p>
 
@@ -331,7 +373,7 @@ function invoiceForm(inv, isNew) {
         <tbody id="lines"></tbody>
       </table></div>
       <datalist id="itemList">${[...db.items].sort(byName).map(i => `<option value="${esc(i.name)}">`).join('')}</datalist>
-      <div class="actions" style="margin-top:8px"><button type="button" class="btn" id="addLine">➕ سطر جديد</button></div>
+      <div class="actions" style="margin-top:8px"><button type="button" class="btn" id="addLine">سطر جديد</button></div>
       <p class="hint">اكتب اسم الصنف، وبتطلعلك الأسماء اللي استعملتها قبل.</p>
 
       <div class="totals">
@@ -342,7 +384,7 @@ function invoiceForm(inv, isNew) {
       <label>ملاحظات<input name="note" value="${esc(inv.note)}"></label>
 
       <div class="actions">
-        <button class="btn primary" type="submit">💾 حفظ الفاتورة</button>
+        <button class="btn primary" type="submit">حفظ الفاتورة</button>
         <a class="btn" href="${isNew ? '#/invoices/' + kind : '#/invoice/' + inv.id}">إلغاء</a>
       </div>
     </form>`;
@@ -459,10 +501,10 @@ function viewInvoice(id) {
   app.innerHTML = `
     <div class="page-head"><h2>فاتورة ${KIND[inv.kind]} رقم ${esc(inv.no)}</h2>
       <div class="btn-row">
-        <button class="btn primary" type="button" onclick="print()">🖨️ طباعة</button>
-        <a class="btn" href="#/edit/${inv.id}">✏️ تعديل</a>
-        ${party && cr ? `<a class="btn" href="#/statement/${party.id}">📄 كشف حساب</a>` : ''}
-        <button class="btn danger" type="button" id="delInv">🗑️ حذف</button>
+        <button class="btn primary" type="button" onclick="print()">طباعة</button>
+        <a class="btn" href="#/edit/${inv.id}">تعديل</a>
+        ${party && cr ? `<a class="btn" href="#/statement/${party.id}">كشف حساب</a>` : ''}
+        <button class="btn danger" type="button" id="delInv">حذف</button>
       </div></div>
     <div class="card">
       <div class="doc-head"><h2>${esc(db.settings.shopName)}</h2><h2>فاتورة ${KIND[inv.kind]}</h2></div>
@@ -496,8 +538,8 @@ function invoicesList(kind) {
   if (!KIND[kind]) kind = 'sale';
   app.innerHTML = `
     <div class="page-head"><h2>فواتير ${kind === 'sale' ? 'البيع' : 'الشراء'}</h2>
-      <div class="btn-row"><a class="btn primary" href="#/new/${kind}">➕ فاتورة ${KIND[kind]} جديدة</a>
-      <button class="btn" type="button" onclick="print()">🖨️ طباعة</button></div></div>
+      <div class="btn-row"><a class="btn primary" href="#/new/${kind}">فاتورة ${KIND[kind]} جديدة</a>
+      <button class="btn" type="button" onclick="print()">طباعة</button></div></div>
     <div class="card filters">
       <label>بحث<input id="fq" placeholder="اسم الحساب أو رقم الفاتورة"></label>
       <label>من تاريخ<input id="ff" type="date"></label>
@@ -526,8 +568,8 @@ function paymentsPage(kind) {
   app.innerHTML = `
     <div class="page-head"><h2>${kind === 'receipt' ? 'سندات القبض' : 'سندات الصرف'}</h2>
       <div class="btn-row">
-        <button class="btn primary" type="button" id="nV">${kind === 'receipt' ? '💵' : '💸'} ${PAY[kind]} جديد</button>
-        <button class="btn" type="button" onclick="print()">🖨️ طباعة</button>
+        <button class="btn primary" type="button" id="nV">${PAY[kind]} جديد</button>
+        <button class="btn" type="button" onclick="print()">طباعة</button>
       </div></div>
     <div class="card filters">
       <label>بحث<input id="pq" placeholder="اسم ${who} أو ملاحظة"></label>
@@ -575,8 +617,8 @@ function partiesPage(type) {
   if (!PTYPE[type]) type = 'customer';
   app.innerHTML = `
     <div class="page-head"><h2>${PTYPES[type]}</h2>
-      <div class="btn-row"><button class="btn primary" type="button" id="addP">➕ ${PTYPE[type]} جديد</button>
-      <button class="btn" type="button" onclick="print()">🖨️ طباعة</button></div></div>
+      <div class="btn-row"><button class="btn primary" type="button" id="addP">${PTYPE[type]} جديد</button>
+      <button class="btn" type="button" onclick="print()">طباعة</button></div></div>
     <div class="card filters"><label>بحث<input id="sq" placeholder="الاسم أو الهاتف"></label>
       <label>عرض<select id="sf"><option value="">الكل</option><option value="nz">اللي إلهم أو عليهم رصيد</option></select></label></div>
     <div class="card" id="pList"></div>`;
@@ -626,8 +668,8 @@ function statementPage(arg) {
   const pickLbl = all ? 'العميل أو المورد' : (type === 'customer' ? 'العميل' : 'المورد');
   app.innerHTML = `
     <div class="page-head"><h2>${all && !p ? 'كشف حساب' : 'كشف حساب ' + PTYPE[type]}</h2>
-      <div class="btn-row">${p ? `<button class="btn primary" type="button" onclick="print()">🖨️ طباعة</button>
-        <button class="btn" type="button" id="stPay">${p.type === 'customer' ? '💵 سند قبض' : '💸 سند صرف'}</button>` : ''}</div></div>
+      <div class="btn-row">${p ? `<button class="btn primary" type="button" onclick="print()">طباعة</button>
+        <button class="btn" type="button" id="stPay">${p.type === 'customer' ? 'سند قبض' : 'سند صرف'}</button>` : ''}</div></div>
     <div class="card filters">
       <label>${pickLbl}<select id="sp"><option value="">— اختر —</option>${partyOptions(partyId, types)}</select></label>
       <label>من تاريخ<input id="sf" type="date" value="${st.from}"></label>
@@ -681,12 +723,12 @@ function reportsPage() {
   app.innerHTML = `
     <div class="page-head"><h2>التقارير</h2></div>
     <div class="stats">
-      ${card('#/report/sales-today', '📈', 'مبيعات اليوم', money(sum('sale', d => d === t)))}
-      ${card('#/report/sales-month', '📅', 'مبيعات هذا الشهر', money(sum('sale', d => d.startsWith(m))))}
-      ${card('#/report/purchases-month', '🛒', 'مشتريات هذا الشهر', money(sum('purchase', d => d.startsWith(m))))}
-      ${card('#/cash', '🏦', 'رصيد الصندوق', cashBal(entriesBalance(cashEntries())))}
-      ${card('#/report/receivables', '🔴', 'ديون لنا على العملاء', money(recv), 'owes')}
-      ${card('#/report/payables', '🟠', 'ديون علينا للموردين', money(payable))}
+      ${card('#/report/sales-today', '', 'مبيعات اليوم', money(sum('sale', d => d === t)))}
+      ${card('#/report/sales-month', '', 'مبيعات هذا الشهر', money(sum('sale', d => d.startsWith(m))))}
+      ${card('#/report/purchases-month', '', 'مشتريات هذا الشهر', money(sum('purchase', d => d.startsWith(m))))}
+      ${card('#/cash', '', 'رصيد الصندوق', cashBal(entriesBalance(cashEntries())))}
+      ${card('#/report/receivables', '', 'ديون لنا على العملاء', money(recv), 'owes')}
+      ${card('#/report/payables', '', 'ديون علينا للموردين', money(payable))}
     </div>`;
 }
 
@@ -722,7 +764,7 @@ function reportPage(key) {
 
   app.innerHTML = `
     <div class="page-head"><h2>${REPORTS[key]}</h2>
-      <div class="btn-row"><a class="btn" href="#/reports">→ رجوع للتقارير</a><button class="btn" type="button" onclick="print()">🖨️ طباعة</button></div></div>
+      <div class="btn-row"><a class="btn" href="#/reports">→ رجوع للتقارير</a><button class="btn" type="button" onclick="print()">طباعة</button></div></div>
     <div class="card">
       <div class="print-only"><div class="doc-head"><h2>${esc(db.settings.shopName)}</h2><h2>${REPORTS[key]}</h2></div></div>
       <div class="report-total"><span>${REPORTS[key]}</span><b>${money(total)} <small>${c}</small></b><span class="hint">${sub}</span></div>
@@ -736,7 +778,7 @@ function cashPage() {
   const st = cashPage.state || (cashPage.state = { from: '', to: '' });
   app.innerHTML = `
     <div class="page-head"><h2>رصيد الصندوق</h2>
-      <div class="btn-row"><a class="btn" href="#/reports">→ رجوع للتقارير</a><button class="btn primary" type="button" onclick="print()">🖨️ طباعة</button></div></div>
+      <div class="btn-row"><a class="btn" href="#/reports">→ رجوع للتقارير</a><button class="btn primary" type="button" onclick="print()">طباعة</button></div></div>
     <div class="card filters">
       <label>من تاريخ<input id="cf" type="date" value="${st.from}"></label>
       <label>إلى تاريخ<input id="ct" type="date" value="${st.to}"></label>
@@ -765,18 +807,18 @@ function settingsPage() {
         <label>العملة<input name="currency" value="${esc(s.currency)}" placeholder="د.أ، ل.س، $ ..."></label>
         <label>رصيد الصندوق الافتتاحي<input name="openingCash" type="number" step="any" value="${esc(s.openingCash)}"></label>
       </div>
-      <div class="actions"><button class="btn primary" type="submit">💾 حفظ</button></div>
+      <div class="actions"><button class="btn primary" type="submit">حفظ</button></div>
     </form>
     <div class="card">
       <h3 style="margin-top:0">النسخ الاحتياطي</h3>
       <p class="hint">البيانات محفوظة على هذا الجهاز وهذا المتصفح بس. خذ نسخة احتياطية بشكل دوري، وبتقدر ترجعها على أي جهاز ثاني.</p>
       <div class="btn-row">
-        <button class="btn primary" type="button" id="exp">⬇️ تنزيل نسخة احتياطية</button>
-        <label class="btn" style="flex-direction:row;color:var(--text)">⬆️ استرجاع نسخة<input type="file" id="imp" accept="application/json,.json" hidden></label>
+        <button class="btn primary" type="button" id="exp">تنزيل نسخة احتياطية</button>
+        <label class="btn" style="flex-direction:row;color:var(--text)">استرجاع نسخة<input type="file" id="imp" accept="application/json,.json" hidden></label>
       </div>
     </div>
     <div class="card" id="logCard">
-      <h3 style="margin-top:0">📜 سجل الحركات (Log)</h3>
+      <h3 style="margin-top:0">سجل الحركات (Log)</h3>
       <p class="hint">كل الفواتير والسندات المدخلة، الأحدث أولاً. فيك تحذف أي حركة لحالها.</p>
       <div class="filters" style="margin-bottom:12px">
         <label>النوع<select id="lt">
@@ -790,7 +832,7 @@ function settingsPage() {
     </div>
     <div class="card">
       <h3 style="margin-top:0">منطقة الخطر</h3>
-      <button class="btn danger" type="button" id="wipe">🗑️ مسح كل البيانات</button>
+      <button class="btn danger" type="button" id="wipe">مسح كل البيانات</button>
     </div>`;
 
   $('#setForm').onsubmit = e => {
@@ -838,7 +880,7 @@ function settingsPage() {
       ${rows.map(r => `<tr><td class="num">${esc(fmtAt(r.at))}</td><td><span class="tag ${r.kind}">${r.label}</span></td>
         <td>${esc(r.no)}</td><td>${esc(r.date)}</td><td>${esc(r.party)}</td><td>${r.pay}</td><td class="num">${money(r.amount)}</td>
         <td><div class="btn-row">${r.inv ? `<a class="btn sm" href="#/invoice/${r.id}">عرض</a>` : ''}
-          <button class="btn sm danger" type="button" data-logdel="${r.kind}:${r.id}">🗑️ حذف</button></div></td></tr>`).join('')}
+          <button class="btn sm danger" type="button" data-logdel="${r.kind}:${r.id}">حذف</button></div></td></tr>`).join('')}
       </tbody></table></div><p class="hint">عدد الحركات: ${rows.length}</p>` : '<p class="hint">لا توجد حركات.</p>';
   };
   $('#logList').onclick = e => {
@@ -900,6 +942,8 @@ function render() {
   window.scrollTo(0, 0);
 }
 
+$$('[data-ic]').forEach(el => el.insertAdjacentHTML('afterbegin', icon(el.dataset.ic)));
+$$('[data-emblem]').forEach(el => { el.innerHTML = emblem('emblem'); });
 $('#menuBtn').onclick = () => document.body.classList.toggle('nav-open');
 $('#navShade').onclick = () => document.body.classList.remove('nav-open');
 window.addEventListener('hashchange', render);
