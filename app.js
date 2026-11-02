@@ -25,10 +25,10 @@ function today() {
 /* ---------- قاعدة البيانات ---------- */
 function blankDb() {
   return {
-    settings: { shopName: 'محلي', currency: 'د.أ', openingCash: 0 },
+    settings: { shopName: 'مؤسسة طريق القمة', currency: 'د.أ', openingCash: 0 },
     parties: [],   // {id, type:'customer'|'supplier', name, phone, opening, at}
     items: [],     // {id, name, unit, buyPrice, sellPrice, openingQty, at}
-    invoices: [],  // {id, kind:'sale'|'purchase', no, date, partyId, lines:[{itemId,name,qty,price}], discount, paid, note, at}
+    invoices: [],  // {id, kind:'sale'|'purchase', no, date, partyId, pay:'cash'|'credit', lines:[{itemId,name,qty,price}], discount, note, at}
     payments: []   // {id, kind:'receipt'|'payment', no, date, partyId, amount, note, at}
   };
 }
@@ -38,6 +38,12 @@ function normalizeDb(d) {
   if (!d || typeof d !== 'object') return b;
   d.settings = { ...b.settings, ...(d.settings || {}) };
   for (const k of ['parties', 'items', 'invoices', 'payments']) if (!Array.isArray(d[k])) d[k] = [];
+  if (!d.settings.shopName || d.settings.shopName === 'محلي') d.settings.shopName = b.settings.shopName;
+  // طريقة الدفع: نقدي أو ذمم
+  for (const inv of d.invoices) {
+    if (!inv.pay) inv.pay = inv.partyId && num(inv.paid) < invTotal(inv) ? 'credit' : 'cash';
+    delete inv.paid;
+  }
   return d;
 }
 
@@ -46,8 +52,6 @@ function loadDb() {
   catch (e) { return blankDb(); }
 }
 
-let db = loadDb();
-
 function save() {
   try { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
   catch (e) { alert('تعذّر حفظ البيانات على هذا الجهاز. خذ نسخة احتياطية من الإعدادات.'); }
@@ -55,20 +59,24 @@ function save() {
 
 /* ---------- مسمّيات ---------- */
 const KIND = { sale: 'بيع', purchase: 'شراء' };
+const PAYMETHOD = { cash: 'نقدي', credit: 'ذمم' };
 const PAY = { receipt: 'سند قبض', payment: 'سند صرف' };
-const PTYPE = { customer: 'زبون', supplier: 'مورد' };
-const PTYPES = { customer: 'الزبائن', supplier: 'الموردين' };
+const PTYPE = { customer: 'عميل', supplier: 'مورد' };
+const PTYPES = { customer: 'العملاء', supplier: 'الموردين' };
 const partyTypeFor = kind => (kind === 'sale' ? 'customer' : 'supplier');
 
 const getParty = id => db.parties.find(p => p.id === id);
 const getItem = id => db.items.find(i => i.id === id);
-const partyName = id => getParty(id)?.name || 'نقدي';
+const partyName = id => getParty(id)?.name || '—';
+const isCredit = inv => inv.pay === 'credit' && !!inv.partyId;
 const cur = () => esc(db.settings.currency);
 
 const subTotal = inv => round(inv.lines.reduce((s, l) => s + num(l.qty) * num(l.price), 0));
 const invTotal = inv => round(subTotal(inv) - num(inv.discount));
 const nextNo = list => list.reduce((m, x) => Math.max(m, +x.no || 0), 0) + 1;
 const byDate = (a, b) => (a.date || '').localeCompare(b.date || '') || (a.at || 0) - (b.at || 0);
+
+let db = loadDb();
 
 /* ---------- الحسابات ---------- */
 // كل حركة: مدين (debit) / دائن (credit). الرصيد = مدين − دائن
@@ -79,11 +87,10 @@ function partyEntries(p) {
   if (ob) e.push({ date: '', at: 0, desc: 'رصيد افتتاحي', debit: p.type === 'customer' ? ob : 0, credit: p.type === 'supplier' ? ob : 0 });
 
   for (const inv of db.invoices) {
-    if (inv.partyId !== p.id) continue;
-    const t = invTotal(inv), paid = num(inv.paid), sale = inv.kind === 'sale';
-    const link = '#/invoice/' + inv.id;
-    e.push({ date: inv.date, at: inv.at, link, desc: `فاتورة ${KIND[inv.kind]} رقم ${inv.no}`, debit: sale ? t : 0, credit: sale ? 0 : t });
-    if (paid) e.push({ date: inv.date, at: inv.at + 0.5, link, desc: `دفعة نقدية مع الفاتورة ${inv.no}`, debit: sale ? 0 : paid, credit: sale ? paid : 0 });
+    // الفواتير النقدية لا تظهر في كشف الحساب، فقط الذمم
+    if (inv.partyId !== p.id || !isCredit(inv)) continue;
+    const t = invTotal(inv), sale = inv.kind === 'sale';
+    e.push({ date: inv.date, at: inv.at, link: '#/invoice/' + inv.id, desc: `فاتورة ${KIND[inv.kind]} ذمم رقم ${inv.no}${inv.note ? ' — ' + inv.note : ''}`, debit: sale ? t : 0, credit: sale ? 0 : t });
   }
   for (const pm of db.payments) {
     if (pm.partyId !== p.id) continue;
@@ -99,10 +106,10 @@ function cashEntries() {
   const ob = num(db.settings.openingCash);
   if (ob) e.push({ date: '', at: 0, desc: 'رصيد افتتاحي للصندوق', debit: ob > 0 ? ob : 0, credit: ob < 0 ? -ob : 0 });
   for (const inv of db.invoices) {
-    const paid = num(inv.paid);
-    if (!paid) continue;
-    const sale = inv.kind === 'sale';
-    e.push({ date: inv.date, at: inv.at, link: '#/invoice/' + inv.id, desc: `فاتورة ${KIND[inv.kind]} رقم ${inv.no} — ${partyName(inv.partyId)}`, debit: sale ? paid : 0, credit: sale ? 0 : paid });
+    if (isCredit(inv)) continue;
+    const t = invTotal(inv), sale = inv.kind === 'sale';
+    if (!t) continue;
+    e.push({ date: inv.date, at: inv.at, link: '#/invoice/' + inv.id, desc: `فاتورة ${KIND[inv.kind]} نقدي رقم ${inv.no}${inv.partyId ? ' — ' + partyName(inv.partyId) : ''}`, debit: sale ? t : 0, credit: sale ? 0 : t });
   }
   for (const pm of db.payments) {
     const r = pm.kind === 'receipt';
@@ -191,7 +198,7 @@ function partyOptions(selected, types = ['customer', 'supplier']) {
 function partyDialog(type, p, after) {
   const isNew = !p;
   p = p || { type, name: '', phone: '', opening: '' };
-  const obHint = type === 'customer' ? 'مبلغ مستحق على الزبون قبل بدء البرنامج' : 'مبلغ مستحق للمورد قبل بدء البرنامج';
+  const obHint = type === 'customer' ? 'مبلغ مستحق على العميل قبل بدء البرنامج' : 'مبلغ مستحق للمورد قبل بدء البرنامج';
   openDialog(isNew ? `${PTYPE[type]} جديد` : `تعديل ${PTYPE[type]}`, `
     <label>الاسم<input name="name" required value="${esc(p.name)}"></label>
     <label>الهاتف<input name="phone" inputmode="tel" value="${esc(p.phone)}"></label>
@@ -242,23 +249,21 @@ function paymentDialog(pm, kind, partyId, after) {
   const isNew = !pm;
   kind = pm ? pm.kind : (kind || 'receipt');
   pm = pm || { kind, no: nextNo(db.payments.filter(x => x.kind === kind)), date: today(), partyId: partyId || '', amount: '', note: '' };
-  if (!db.parties.length) { alert('أضف زبون أو مورد أولاً'); return; }
+  const ptype = kind === 'receipt' ? 'customer' : 'supplier';
+  if (!db.parties.some(p => p.type === ptype)) { alert(`أضف ${PTYPE[ptype]} أولاً من صفحة ${PTYPES[ptype]}`); return; }
   openDialog(isNew ? `${PAY[kind]} جديد` : `تعديل ${PAY[kind]} رقم ${pm.no}`, `
-    <label>النوع<select name="kind" ${isNew ? '' : 'disabled'}>
-      <option value="receipt" ${kind === 'receipt' ? 'selected' : ''}>سند قبض (استلمت مصاري من زبون)</option>
-      <option value="payment" ${kind === 'payment' ? 'selected' : ''}>سند صرف (دفعت مصاري لمورد)</option>
-    </select></label>
+    <p class="hint" style="margin:0">${kind === 'receipt' ? 'استلام مبلغ من عميل' : 'دفع مبلغ لمورد'}</p>
     <div class="grid">
       <label>الرقم<input name="no" type="number" min="1" required value="${esc(pm.no)}"></label>
       <label>التاريخ<input name="date" type="date" required value="${esc(pm.date)}"></label>
     </div>
-    <label>الحساب<select name="partyId" required><option value="">— اختر —</option>${partyOptions(pm.partyId, kind === 'receipt' ? ['customer', 'supplier'] : ['supplier', 'customer'])}</select></label>
+    <label>${kind === 'receipt' ? 'العميل' : 'المورد'}<select name="partyId" required><option value="">— اختر —</option>${partyOptions(pm.partyId, [ptype])}</select></label>
     <label>المبلغ (${cur()})<input name="amount" type="number" step="any" min="0" required value="${esc(pm.amount)}"></label>
     <label>ملاحظة<input name="note" value="${esc(pm.note)}"></label>`,
     d => {
-      const k = isNew ? d.kind : pm.kind;
+      const k = kind;
       const amount = round(num(d.amount));
-      if (!d.partyId) { alert('اختر الحساب'); return false; }
+      if (!d.partyId) { alert('اختر ' + (k === 'receipt' ? 'العميل' : 'المورد')); return false; }
       if (!(amount > 0)) { alert('اكتب المبلغ'); return false; }
       if (!d.date) { alert('اختر التاريخ'); return false; }
       const no = parseInt(d.no, 10) || nextNo(db.payments.filter(x => x.kind === k));
@@ -268,11 +273,6 @@ function paymentDialog(pm, kind, partyId, after) {
       save(); toast('تم الحفظ');
       after && after(pm);
     });
-  // تحديث الرقم التلقائي عند تغيير النوع
-  const f = $('#dlgForm');
-  if (isNew) $('[name=kind]', f).onchange = e => {
-    $('[name=no]', f).value = nextNo(db.payments.filter(x => x.kind === e.target.value));
-  };
 }
 
 /* ---------- الصفحات ---------- */
@@ -282,51 +282,49 @@ function home() {
   const recv = db.parties.filter(p => p.type === 'customer').reduce((s, p) => s + Math.max(0, partyBalance(p)), 0);
   const payable = db.parties.filter(p => p.type === 'supplier').reduce((s, p) => s + Math.max(0, -partyBalance(p)), 0);
   const cash = entriesBalance(cashEntries());
-  const recent = [...db.invoices].sort(byDate).reverse().slice(0, 8);
   const c = `<small>${cur()}</small>`;
 
   app.innerHTML = `
-    <div class="page-head"><h2>الرئيسية</h2></div>
-    <div class="quick">
-      <a class="btn primary" href="#/new/sale">➕ فاتورة بيع</a>
-      <a class="btn" href="#/new/purchase">➕ فاتورة شراء</a>
-      <button class="btn" type="button" id="qReceipt">💵 سند قبض</button>
-      <button class="btn" type="button" id="qPayment">💸 سند صرف</button>
+    <div class="welcome"><h2>${esc(db.settings.shopName)}</h2><p>شو بدك تعمل اليوم؟</p></div>
+    <div class="tiles">
+      <a class="tile purchase" href="#/new/purchase"><span class="ic">📦</span>فاتورة شراء</a>
+      <a class="tile sale" href="#/new/sale"><span class="ic">🧾</span>فاتورة بيع</a>
+      <button class="tile receipt" type="button" id="qReceipt"><span class="ic">💵</span>سند قبض</button>
+      <button class="tile payment" type="button" id="qPayment"><span class="ic">💸</span>سند صرف</button>
     </div>
     <div class="stats">
       <div class="stat"><div class="k">مبيعات اليوم</div><div class="v">${money(sum('sale', d => d === t))} ${c}</div></div>
       <div class="stat"><div class="k">مبيعات هذا الشهر</div><div class="v">${money(sum('sale', d => d.startsWith(m)))} ${c}</div></div>
       <div class="stat"><div class="k">مشتريات هذا الشهر</div><div class="v">${money(sum('purchase', d => d.startsWith(m)))} ${c}</div></div>
       <div class="stat"><div class="k">رصيد الصندوق</div><div class="v">${cashBal(cash)} ${c}</div></div>
-      <div class="stat"><div class="k">ديون لنا على الزبائن</div><div class="v owes">${money(recv)} ${c}</div></div>
+      <div class="stat"><div class="k">ديون لنا على العملاء</div><div class="v owes">${money(recv)} ${c}</div></div>
       <div class="stat"><div class="k">ديون علينا للموردين</div><div class="v">${money(payable)} ${c}</div></div>
-    </div>
-    <div class="card">
-      <h3 style="margin-top:0">آخر الفواتير</h3>
-      ${invoiceTable(recent)}
     </div>`;
   $('#qReceipt').onclick = () => paymentDialog(null, 'receipt', '', () => render());
   $('#qPayment').onclick = () => paymentDialog(null, 'payment', '', () => render());
-  bindRowLinks();
 }
 
 function invoiceTable(list, showKind = true) {
   if (!list.length) return `<p class="hint">لا توجد فواتير بعد.</p>`;
-  let tt = 0, tp = 0;
+  let tc = 0, tr = 0;
   const rows = list.map(i => {
-    const t = invTotal(i), p = num(i.paid);
-    tt += t; tp += p;
+    const t = invTotal(i), cr = isCredit(i);
+    if (cr) tr += t; else tc += t;
     return `<tr class="clickable" data-href="#/invoice/${i.id}">
       ${showKind ? `<td><span class="tag ${i.kind}">${KIND[i.kind]}</span></td>` : ''}
       <td>${esc(i.no)}</td><td>${esc(i.date)}</td><td>${esc(partyName(i.partyId))}</td>
-      <td class="num">${money(t)}</td><td class="num">${money(p)}</td><td class="num">${money(t - p)}</td></tr>`;
+      <td><span class="tag ${cr ? 'credit' : 'cash'}">${PAYMETHOD[cr ? 'credit' : 'cash']}</span></td>
+      <td class="num">${money(t)}</td></tr>`;
   }).join('');
   return `<div class="table-wrap"><table class="tbl"><thead><tr>
-    ${showKind ? '<th>النوع</th>' : ''}<th>الرقم</th><th>التاريخ</th><th>الحساب</th>
-    <th class="num">الصافي</th><th class="num">المدفوع</th><th class="num">المتبقي</th></tr></thead>
+    ${showKind ? '<th>النوع</th>' : ''}<th>الرقم</th><th>التاريخ</th><th>الحساب</th><th>الدفع</th>
+    <th class="num">الصافي</th></tr></thead>
     <tbody>${rows}</tbody>
-    <tfoot><tr><th colspan="${showKind ? 4 : 3}">المجموع (${list.length})</th>
-    <th class="num">${money(tt)}</th><th class="num">${money(tp)}</th><th class="num">${money(tt - tp)}</th></tr></tfoot></table></div>`;
+    <tfoot>
+      <tr><th colspan="${showKind ? 5 : 4}">مجموع النقدي</th><th class="num">${money(tc)}</th></tr>
+      <tr><th colspan="${showKind ? 5 : 4}">مجموع الذمم</th><th class="num">${money(tr)}</th></tr>
+      <tr><th colspan="${showKind ? 5 : 4}">الإجمالي (${list.length} فاتورة)</th><th class="num">${money(tc + tr)}</th></tr>
+    </tfoot></table></div>`;
 }
 
 function bindRowLinks(root = app) {
@@ -341,7 +339,7 @@ function newInvoice(kind) {
   if (!KIND[kind]) kind = 'sale';
   invoiceForm({
     kind, no: nextNo(db.invoices.filter(i => i.kind === kind)), date: today(), partyId: '',
-    lines: [{ itemId: null, name: '', qty: 1, price: '' }], discount: '', paid: '', note: ''
+    pay: 'cash', lines: [{ itemId: null, name: '', qty: 1, price: '' }], discount: '', note: ''
   }, true);
 }
 
@@ -361,10 +359,18 @@ function invoiceForm(inv, isNew) {
       <div class="grid">
         <label>رقم الفاتورة<input name="no" type="number" min="1" required value="${esc(inv.no)}"></label>
         <label>التاريخ<input name="date" type="date" required value="${esc(inv.date)}"></label>
-        <label>${kind === 'sale' ? 'الزبون' : 'المورد'}
-          <select name="partyId" id="partySel"><option value="">نقدي (بدون حساب)</option>${partyOptions(inv.partyId, [ptype])}</select></label>
+      </div>
+      <div class="paybox">
+        <span class="paylbl">طريقة الدفع</span>
+        <label class="radio"><input type="radio" name="pay" value="cash" ${inv.pay !== 'credit' ? 'checked' : ''}> 💵 نقدي</label>
+        <label class="radio"><input type="radio" name="pay" value="credit" ${inv.pay === 'credit' ? 'checked' : ''}> 📒 ذمم (على الحساب)</label>
+      </div>
+      <div class="grid">
+        <label><span id="partyLbl"></span>
+          <select name="partyId" id="partySel"></select></label>
         <button type="button" class="btn" id="addParty">➕ ${PTYPE[ptype]} جديد</button>
       </div>
+      <p class="hint" id="payHint"></p>
 
       <h3>الأصناف</h3>
       <div class="table-wrap"><table class="tbl lines">
@@ -379,12 +385,7 @@ function invoiceForm(inv, isNew) {
         <div class="sum">المجموع<b id="tSub"></b></div>
         <label>الخصم<input name="discount" type="number" step="any" min="0" value="${esc(inv.discount)}"></label>
         <div class="sum">الصافي<b id="tNet"></b></div>
-        <label>المدفوع نقداً
-          <span class="inline"><input name="paid" id="paidInp" type="number" step="any" min="0" value="${esc(inv.paid)}">
-          <button type="button" class="btn sm" id="payFull">كامل</button></span></label>
-        <div class="sum">المتبقي على الحساب<b id="tRem"></b></div>
       </div>
-      <p class="hint" id="cashHint"></p>
       <label>ملاحظات<input name="note" value="${esc(inv.note)}"></label>
 
       <div class="actions">
@@ -405,18 +406,21 @@ function invoiceForm(inv, isNew) {
   }
   function renderLines() { tbody.innerHTML = inv.lines.map(lineRow).join(''); recalc(); }
 
+  const payMethod = () => form.querySelector('[name=pay]:checked').value;
+  const who = kind === 'sale' ? 'العميل' : 'المورد';
+  function updatePay(selected) {
+    const credit = payMethod() === 'credit';
+    const sel = selected !== undefined ? selected : form.partyId.value;
+    $('#partyLbl').textContent = credit ? who : `${who} (اختياري)`;
+    $('#partySel').innerHTML = `<option value="">${credit ? '— اختر —' : 'نقدي بدون اسم'}</option>${partyOptions(sel, [ptype])}`;
+    $('#payHint').textContent = credit
+      ? `فاتورة ذمم: المبلغ بيتسجل على حساب ${who} وبيظهر بكشف الحساب.`
+      : 'فاتورة نقدية: المبلغ بينحسب بالصندوق وما بيظهر بكشف الحساب.';
+  }
   function recalc() {
     inv.discount = form.discount.value;
-    inv.paid = form.paid.value;
-    const net = invTotal(inv);
-    const cash = !form.partyId.value;
-    if (cash) form.paid.value = net ? round(net) : '';
-    form.paid.readOnly = cash;
-    $('#payFull').disabled = cash;
-    $('#cashHint').textContent = cash ? 'فاتورة نقدية: المبلغ كامل بينحسب مدفوع. لتسجيلها على الحساب (دين) اختر ' + PTYPE[ptype] + '.' : '';
     $('#tSub').textContent = money(subTotal(inv));
-    $('#tNet').textContent = money(net);
-    $('#tRem').textContent = money(net - num(form.paid.value));
+    $('#tNet').textContent = money(invTotal(inv));
   }
 
   tbody.addEventListener('input', e => {
@@ -448,13 +452,8 @@ function invoiceForm(inv, isNew) {
     $(`[data-i="${inv.lines.length - 1}"][data-f="name"]`, tbody).focus();
   };
   form.discount.oninput = recalc;
-  form.paid.oninput = recalc;
-  form.partyId.onchange = () => { if (form.partyId.value && isNew) form.paid.value = ''; recalc(); };
-  $('#payFull').onclick = () => { form.paid.value = round(invTotal(inv)); recalc(); };
-  $('#addParty').onclick = () => partyDialog(ptype, null, p => {
-    $('#partySel').innerHTML = `<option value="">نقدي (بدون حساب)</option>${partyOptions(p.id, [ptype])}`;
-    recalc();
-  });
+  $$('[name=pay]', form).forEach(r => r.onchange = () => updatePay());
+  $('#addParty').onclick = () => partyDialog(ptype, null, p => updatePay(p.id));
 
   form.onsubmit = e => {
     e.preventDefault();
@@ -471,7 +470,8 @@ function invoiceForm(inv, isNew) {
     const total = round(lines.reduce((s, l) => s + l.qty * l.price, 0) - discount);
     if (total < 0) return alert('الخصم أكبر من المجموع');
     const partyId = form.partyId.value;
-    const paid = partyId ? round(num(form.paid.value)) : total;
+    const pay = payMethod();
+    if (pay === 'credit' && !partyId) return alert(`فاتورة الذمم لازم تختار فيها ${who}`);
 
     // ربط الأصناف أو إنشاؤها
     for (const l of lines) {
@@ -488,12 +488,13 @@ function invoiceForm(inv, isNew) {
 
     let rec = db.invoices.find(x => x.id === inv.id);
     if (!rec) { rec = { id: uid(), at: Date.now(), kind }; db.invoices.push(rec); }
-    Object.assign(rec, { no, date: form.date.value, partyId, lines, discount, paid, note: form.note.value.trim() });
+    Object.assign(rec, { no, date: form.date.value, pay, partyId, lines, discount, note: form.note.value.trim() });
     save();
     toast('تم حفظ الفاتورة');
     location.hash = '#/invoice/' + rec.id;
   };
 
+  updatePay(inv.partyId || '');
   renderLines();
 }
 
@@ -501,13 +502,13 @@ function invoiceForm(inv, isNew) {
 function viewInvoice(id) {
   const inv = db.invoices.find(i => i.id === id);
   if (!inv) return notFound();
-  const t = invTotal(inv), paid = num(inv.paid), party = getParty(inv.partyId);
+  const t = invTotal(inv), party = getParty(inv.partyId), cr = isCredit(inv);
   app.innerHTML = `
     <div class="page-head"><h2>فاتورة ${KIND[inv.kind]} رقم ${esc(inv.no)}</h2>
       <div class="btn-row">
         <button class="btn primary" type="button" onclick="print()">🖨️ طباعة</button>
         <a class="btn" href="#/edit/${inv.id}">✏️ تعديل</a>
-        ${party ? `<a class="btn" href="#/statement/${party.id}">📄 كشف حساب</a>` : ''}
+        ${party && cr ? `<a class="btn" href="#/statement/${party.id}">📄 كشف حساب</a>` : ''}
         <button class="btn danger" type="button" id="delInv">🗑️ حذف</button>
       </div></div>
     <div class="card">
@@ -515,7 +516,8 @@ function viewInvoice(id) {
       <div class="doc-meta">
         <div><span>رقم الفاتورة: </span>${esc(inv.no)}</div>
         <div><span>التاريخ: </span>${esc(inv.date)}</div>
-        <div><span>${inv.kind === 'sale' ? 'الزبون' : 'المورد'}: </span>${esc(partyName(inv.partyId))}</div>
+        <div><span>طريقة الدفع: </span><b>${PAYMETHOD[cr ? 'credit' : 'cash']}</b></div>
+        <div><span>${inv.kind === 'sale' ? 'العميل' : 'المورد'}: </span>${esc(partyName(inv.partyId))}</div>
         ${party?.phone ? `<div><span>الهاتف: </span>${esc(party.phone)}</div>` : ''}
       </div>
       <div class="table-wrap"><table class="tbl"><thead><tr><th>#</th><th>الصنف</th><th class="num">الكمية</th><th class="num">السعر</th><th class="num">المجموع</th></tr></thead>
@@ -525,8 +527,6 @@ function viewInvoice(id) {
         <div><span>المجموع</span><b>${money(subTotal(inv))}</b></div>
         ${num(inv.discount) ? `<div><span>الخصم</span><b>${money(inv.discount)}</b></div>` : ''}
         <div><span>الصافي</span><b>${money(t)} ${cur()}</b></div>
-        <div><span>المدفوع</span><b>${money(paid)}</b></div>
-        <div><span>المتبقي</span><b>${money(t - paid)}</b></div>
       </div>
       ${inv.note ? `<p><b>ملاحظات:</b> ${esc(inv.note)}</p>` : ''}
     </div>`;
@@ -549,7 +549,7 @@ function invoicesList(kind) {
       <label>بحث<input id="fq" placeholder="اسم الحساب أو رقم الفاتورة"></label>
       <label>من تاريخ<input id="ff" type="date"></label>
       <label>إلى تاريخ<input id="ft" type="date"></label>
-      <label>الحالة<select id="fs"><option value="">الكل</option><option value="open">عليها باقي</option><option value="done">مدفوعة بالكامل</option></select></label>
+      <label>طريقة الدفع<select id="fs"><option value="">الكل</option><option value="cash">نقدي</option><option value="credit">ذمم</option></select></label>
     </div>
     <div class="card" id="invList"></div>`;
   const draw = () => {
@@ -557,7 +557,7 @@ function invoicesList(kind) {
     const list = db.invoices.filter(i => i.kind === kind)
       .filter(i => !q || String(i.no) === q || partyName(i.partyId).includes(q))
       .filter(i => (!f || i.date >= f) && (!t || i.date <= t))
-      .filter(i => !s || (s === 'open' ? invTotal(i) - num(i.paid) > 0.004 : invTotal(i) - num(i.paid) <= 0.004))
+      .filter(i => !s || (s === 'credit') === isCredit(i))
       .sort(byDate).reverse();
     $('#invList').innerHTML = invoiceTable(list, false);
     bindRowLinks($('#invList'));
@@ -567,38 +567,39 @@ function invoicesList(kind) {
 }
 
 /* ----- السندات ----- */
-function paymentsPage() {
+function paymentsPage(kind) {
+  if (!PAY[kind]) kind = 'receipt';
+  const who = kind === 'receipt' ? 'العميل' : 'المورد';
   app.innerHTML = `
-    <div class="page-head"><h2>سندات القبض والصرف</h2>
+    <div class="page-head"><h2>${kind === 'receipt' ? 'سندات القبض' : 'سندات الصرف'}</h2>
       <div class="btn-row">
-        <button class="btn primary" type="button" id="nR">💵 سند قبض</button>
-        <button class="btn" type="button" id="nP">💸 سند صرف</button>
+        <button class="btn primary" type="button" id="nV">${kind === 'receipt' ? '💵' : '💸'} ${PAY[kind]} جديد</button>
+        <button class="btn" type="button" onclick="print()">🖨️ طباعة</button>
       </div></div>
     <div class="card filters">
-      <label>النوع<select id="pk"><option value="">الكل</option><option value="receipt">سندات القبض</option><option value="payment">سندات الصرف</option></select></label>
-      <label>بحث<input id="pq" placeholder="اسم الحساب أو ملاحظة"></label>
+      <label>بحث<input id="pq" placeholder="اسم ${who} أو ملاحظة"></label>
       <label>من تاريخ<input id="pf" type="date"></label>
       <label>إلى تاريخ<input id="pt" type="date"></label>
     </div>
     <div class="card" id="payList"></div>`;
   const draw = () => {
-    const k = $('#pk').value, q = $('#pq').value.trim(), f = $('#pf').value, t = $('#pt').value;
+    const q = $('#pq').value.trim(), f = $('#pf').value, t = $('#pt').value;
     const list = db.payments
-      .filter(p => !k || p.kind === k)
+      .filter(p => p.kind === kind)
       .filter(p => !q || partyName(p.partyId).includes(q) || (p.note || '').includes(q) || String(p.no) === q)
       .filter(p => (!f || p.date >= f) && (!t || p.date <= t))
       .sort(byDate).reverse();
-    let tr = 0, tp = 0;
+    let tot = 0;
     const rows = list.map(p => {
-      if (p.kind === 'receipt') tr += num(p.amount); else tp += num(p.amount);
-      return `<tr><td><span class="tag ${p.kind}">${PAY[p.kind]}</span></td><td>${esc(p.no)}</td><td>${esc(p.date)}</td>
+      tot += num(p.amount);
+      return `<tr><td>${esc(p.no)}</td><td>${esc(p.date)}</td>
         <td><a href="#/statement/${p.partyId}">${esc(partyName(p.partyId))}</a></td><td class="num">${money(p.amount)}</td><td>${esc(p.note)}</td>
         <td><div class="btn-row"><button class="btn sm" data-edit="${p.id}">تعديل</button><button class="btn sm danger" data-del="${p.id}">حذف</button></div></td></tr>`;
     }).join('');
     $('#payList').innerHTML = list.length ? `<div class="table-wrap"><table class="tbl"><thead><tr>
-      <th>النوع</th><th>الرقم</th><th>التاريخ</th><th>الحساب</th><th class="num">المبلغ</th><th>ملاحظة</th><th></th></tr></thead>
-      <tbody>${rows}</tbody></table></div>
-      <p>مجموع المقبوضات: <b>${money(tr)}</b> — مجموع المدفوعات: <b>${money(tp)}</b> ${cur()}</p>`
+      <th>الرقم</th><th>التاريخ</th><th>${who}</th><th class="num">المبلغ</th><th>ملاحظة</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr><th colspan="3">المجموع (${list.length})</th><th class="num">${money(tot)}</th><th colspan="2"></th></tr></tfoot></table></div>`
       : '<p class="hint">لا توجد سندات.</p>';
   };
   $('#payList').onclick = e => {
@@ -611,13 +612,12 @@ function paymentsPage() {
       }
     }
   };
-  $('#nR').onclick = () => paymentDialog(null, 'receipt', '', draw);
-  $('#nP').onclick = () => paymentDialog(null, 'payment', '', draw);
+  $('#nV').onclick = () => paymentDialog(null, kind, '', draw);
   $$('.filters input, .filters select').forEach(el => el.oninput = draw);
   draw();
 }
 
-/* ----- الزبائن / الموردين ----- */
+/* ----- العملاء / الموردين ----- */
 function partiesPage(type) {
   if (!PTYPE[type]) type = 'customer';
   app.innerHTML = `
@@ -699,26 +699,28 @@ function itemsPage() {
 }
 
 /* ----- كشف حساب ----- */
-function statementPage(partyId) {
+function statementPage(arg) {
   const st = statementPage.state || (statementPage.state = { from: '', to: '' });
-  const p = getParty(partyId);
+  const p = getParty(arg);
+  const type = p ? p.type : (PTYPE[arg] ? arg : 'customer');
+  const partyId = p ? p.id : '';
   app.innerHTML = `
-    <div class="page-head"><h2>كشف حساب</h2>
+    <div class="page-head"><h2>كشف حساب ${PTYPE[type]}</h2>
       <div class="btn-row">${p ? `<button class="btn primary" type="button" onclick="print()">🖨️ طباعة</button>
         <button class="btn" type="button" id="stPay">${p.type === 'customer' ? '💵 سند قبض' : '💸 سند صرف'}</button>` : ''}</div></div>
     <div class="card filters">
-      <label>الحساب<select id="sp"><option value="">— اختر زبون أو مورد —</option>${partyOptions(partyId)}</select></label>
+      <label>${type === 'customer' ? 'العميل' : 'المورد'}<select id="sp"><option value="">— اختر —</option>${partyOptions(partyId, [type])}</select></label>
       <label>من تاريخ<input id="sf" type="date" value="${st.from}"></label>
       <label>إلى تاريخ<input id="stt" type="date" value="${st.to}"></label>
     </div>
     <div class="card" id="stBody"></div>`;
 
-  $('#sp').onchange = e => { location.hash = '#/statement/' + e.target.value; };
+  $('#sp').onchange = e => { location.hash = '#/statement/' + (e.target.value || type); };
   const draw = () => {
     st.from = $('#sf').value; st.to = $('#stt').value;
     if (!p) {
-      $('#stBody').innerHTML = db.parties.length ? '<p class="hint">اختر الحساب من فوق.</p>'
-        : '<p class="hint">لا يوجد زبائن أو موردين بعد.</p>';
+      $('#stBody').innerHTML = db.parties.some(x => x.type === type) ? `<p class="hint">اختر ${type === 'customer' ? 'العميل' : 'المورد'} من فوق.</p>`
+        : `<p class="hint">لا يوجد ${PTYPES[type]} بعد.</p>`;
       return;
     }
     const { html, balance } = statementTable(partyEntries(p), st.from, st.to, { dr: 'مدين (عليه)', cr: 'دائن (له)', bal: partyBal });
@@ -731,7 +733,8 @@ function statementPage(partyId) {
       <div class="doc-meta"><div><span>الاسم: </span><b>${esc(p.name)}</b></div>
         ${p.phone ? `<div><span>الهاتف: </span>${esc(p.phone)}</div>` : ''}<div>${period}</div></div>
       ${html}
-      <div class="balance-box">${verdict}</div>`;
+      <div class="balance-box">${verdict}</div>
+      <p class="hint no-print">كشف الحساب بيعرض فواتير الذمم والسندات بس. الفواتير النقدية ما بتظهر فيه.</p>`;
   };
   $('#sf').oninput = draw; $('#stt').oninput = draw;
   if (p) $('#stPay').onclick = () => paymentDialog(null, p.type === 'customer' ? 'receipt' : 'payment', p.id, draw);
@@ -836,13 +839,19 @@ const routes = {
 function render() {
   const [name = 'home', arg = ''] = location.hash.replace(/^#\/?/, '').split('/');
   const fn = routes[name] || home;
-  const shop = db.settings.shopName || 'محلي';
+  const shop = db.settings.shopName || 'مؤسسة طريق القمة';
   $('#shopTitle').textContent = shop;
   document.title = `${shop} — محاسبة`;
-  const full = '#/' + [name, arg].filter(Boolean).join('/');
+  let navArg = decodeURIComponent(arg);
+  if (name === 'statement' && getParty(navArg)) navArg = getParty(navArg).type;
+  if (name === 'payments' && !PAY[navArg]) navArg = 'receipt';
+  if (name === 'parties' && !PTYPE[navArg]) navArg = 'customer';
+  if (name === 'invoices' && !KIND[navArg]) navArg = 'sale';
+  if (name === 'statement' && !PTYPE[navArg]) navArg = 'customer';
+  const full = '#/' + [name, navArg].filter(Boolean).join('/');
   $$('#nav a').forEach(a => {
     const h = a.getAttribute('href');
-    a.classList.toggle('active', h === full || h === '#/' + name);
+    a.classList.toggle('active', h === full || (h === '#/' + name && !navArg));
   });
   document.body.classList.remove('nav-open');
   if ($('#dlg').open) $('#dlg').close();
