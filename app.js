@@ -732,7 +732,6 @@ function reportsPage() {
   app.innerHTML = `
     <div class="page-head"><h2>التقارير</h2></div>
     <div class="stats">
-      ${card('#/report/sales-today', '', 'مبيعات اليوم', money(sum('sale', d => d === t)))}
       ${card('#/report/sales-month', '', 'مبيعات هذا الشهر', money(sum('sale', d => d.startsWith(m))))}
       ${card('#/report/purchases-month', '', 'مشتريات هذا الشهر', money(sum('purchase', d => d.startsWith(m))))}
       ${card('#/report/receivables', '', 'ديون لنا على العملاء', money(recv), 'owes')}
@@ -741,7 +740,7 @@ function reportsPage() {
 }
 
 function reportPage(key) {
-  if (!REPORTS[key]) key = 'sales-today';
+  if (!REPORTS[key] || key === 'sales-today') key = 'sales-month';
   const t = today(), m = t.slice(0, 7);
   const c = cur();
   let total = 0, body = '', sub = '';
