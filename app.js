@@ -129,14 +129,6 @@ function partyBal(v) {
 }
 const cashBal = v => (round(v) < 0 ? '-' : '') + money(Math.abs(v));
 
-function itemStock(it) {
-  let q = num(it.openingQty);
-  for (const inv of db.invoices) for (const l of inv.lines) {
-    if (l.itemId === it.id) q += inv.kind === 'purchase' ? num(l.qty) : -num(l.qty);
-  }
-  return round(q);
-}
-
 function statementTable(entries, from, to, o) {
   let prev = 0, hasPrev = false;
   const rows = [];
@@ -217,31 +209,6 @@ function partyDialog(type, p, after) {
       Object.assign(p, { name, phone: d.phone.trim(), opening: round(num(d.opening)) });
       save(); toast('تم الحفظ');
       after && after(p);
-    });
-}
-
-function itemDialog(it, after) {
-  const isNew = !it;
-  it = it || { name: '', unit: '', buyPrice: '', sellPrice: '', openingQty: '' };
-  openDialog(isNew ? 'صنف جديد' : 'تعديل صنف', `
-    <label>اسم الصنف<input name="name" required value="${esc(it.name)}"></label>
-    <label>الوحدة<input name="unit" placeholder="حبة، كيلو، كرتونة..." value="${esc(it.unit)}"></label>
-    <div class="grid">
-      <label>سعر الشراء<input name="buyPrice" type="number" step="any" min="0" value="${esc(it.buyPrice)}"></label>
-      <label>سعر البيع<input name="sellPrice" type="number" step="any" min="0" value="${esc(it.sellPrice)}"></label>
-    </div>
-    <label>الكمية الافتتاحية<input name="openingQty" type="number" step="any" value="${esc(it.openingQty)}">
-      <span class="hint">الكمية الموجودة بالمحل قبل بدء البرنامج</span></label>`,
-    d => {
-      const name = d.name.trim();
-      if (!name) { alert('اكتب اسم الصنف'); return false; }
-      if (db.items.some(x => x.id !== it.id && x.name.trim() === name)) { alert('في صنف بنفس الاسم'); return false; }
-      if (isNew) { it = { id: uid(), at: Date.now() }; db.items.push(it); }
-      Object.assign(it, { name, unit: d.unit.trim(), buyPrice: round(num(d.buyPrice)), sellPrice: round(num(d.sellPrice)), openingQty: round(num(d.openingQty)) });
-      // تحديث أسماء الصنف في الفواتير القديمة
-      for (const inv of db.invoices) for (const l of inv.lines) if (l.itemId === it.id) l.name = it.name;
-      save(); toast('تم الحفظ');
-      after && after(it);
     });
 }
 
@@ -365,7 +332,7 @@ function invoiceForm(inv, isNew) {
       </table></div>
       <datalist id="itemList">${[...db.items].sort(byName).map(i => `<option value="${esc(i.name)}">`).join('')}</datalist>
       <div class="actions" style="margin-top:8px"><button type="button" class="btn" id="addLine">➕ سطر جديد</button></div>
-      <p class="hint">اكتب اسم الصنف أو اختاره من القائمة. إذا كان صنف جديد بينضاف للأصناف تلقائياً.</p>
+      <p class="hint">اكتب اسم الصنف، وبتطلعلك الأسماء اللي استعملتها قبل.</p>
 
       <div class="totals">
         <div class="sum">المجموع<b id="tSub"></b></div>
@@ -646,44 +613,6 @@ function partiesPage(type) {
   draw();
 }
 
-/* ----- الأصناف ----- */
-function itemsPage() {
-  app.innerHTML = `
-    <div class="page-head"><h2>الأصناف والمخزون</h2>
-      <div class="btn-row"><button class="btn primary" type="button" id="addI">➕ صنف جديد</button>
-      <button class="btn" type="button" onclick="print()">🖨️ طباعة</button></div></div>
-    <div class="card filters"><label>بحث<input id="iq" placeholder="اسم الصنف"></label></div>
-    <div class="card" id="iList"></div>`;
-  const draw = () => {
-    const q = $('#iq').value.trim();
-    const list = db.items.filter(i => !q || i.name.includes(q)).sort(byName);
-    let value = 0;
-    $('#iList').innerHTML = list.length ? `<div class="table-wrap"><table class="tbl"><thead><tr>
-      <th>الصنف</th><th>الوحدة</th><th class="num">سعر الشراء</th><th class="num">سعر البيع</th><th class="num">الكمية الموجودة</th><th class="num">قيمة المخزون</th><th></th></tr></thead><tbody>
-      ${list.map(i => {
-        const s = itemStock(i), v = Math.max(0, s) * num(i.buyPrice);
-        value += v;
-        return `<tr><td>${esc(i.name)}</td><td>${esc(i.unit)}</td><td class="num">${money(i.buyPrice)}</td><td class="num">${money(i.sellPrice)}</td>
-          <td class="num ${s < 0 ? 'owes' : ''}">${s}</td><td class="num">${money(v)}</td>
-          <td><div class="btn-row"><button class="btn sm" data-edit="${i.id}">تعديل</button><button class="btn sm danger" data-del="${i.id}">حذف</button></div></td></tr>`;
-      }).join('')}
-      </tbody><tfoot><tr><th colspan="5">قيمة المخزون الإجمالية (بسعر الشراء)</th><th class="num">${money(value)}</th><th></th></tr></tfoot></table></div>`
-      : '<p class="hint">لا توجد أصناف بعد. الأصناف بتنضاف تلقائياً لما تكتبها بالفواتير، أو بتقدر تضيفها من هون.</p>';
-  };
-  $('#iList').onclick = e => {
-    const ed = e.target.closest('[data-edit]'), dl = e.target.closest('[data-del]');
-    if (ed) itemDialog(getItem(ed.dataset.edit), draw);
-    if (dl) {
-      const it = getItem(dl.dataset.del);
-      if (db.invoices.some(inv => inv.lines.some(l => l.itemId === it.id))) return alert('ما بنقدر نحذف الصنف لأنه موجود بفواتير.');
-      if (confirm(`متأكد بدك تحذف ${it.name}؟`)) { db.items = db.items.filter(x => x.id !== it.id); save(); toast('تم الحذف'); draw(); }
-    }
-  };
-  $('#addI').onclick = () => itemDialog(null, draw);
-  $('#iq').oninput = draw;
-  draw();
-}
-
 /* ----- كشف حساب ----- */
 function statementPage(arg) {
   const st = statementPage.state || (statementPage.state = { from: '', to: '', all: false });
@@ -943,7 +872,7 @@ function notFound() {
 /* ---------- التوجيه ---------- */
 const routes = {
   home, new: newInvoice, edit: editInvoice, invoice: viewInvoice, invoices: invoicesList,
-  payments: paymentsPage, parties: partiesPage, items: itemsPage, statement: statementPage,
+  payments: paymentsPage, parties: partiesPage, statement: statementPage,
   cash: cashPage, settings: settingsPage, report: reportPage, reports: reportsPage
 };
 
