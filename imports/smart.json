@@ -1,0 +1,279 @@
+{
+ "title": "كشف حساب الحلول الذكية",
+ "parties": [
+  {
+   "id": "smart-party",
+   "type": "supplier",
+   "name": "الحلول الذكية",
+   "phone": "",
+   "opening": 1257.5,
+   "at": 1786999999000
+  }
+ ],
+ "invoices": [
+  {
+   "id": "smart-inv-000",
+   "kind": "purchase",
+   "no": "ح-1",
+   "date": "2026-08-12",
+   "pay": "credit",
+   "partyId": "smart-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 246
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1787000000000
+  },
+  {
+   "id": "smart-inv-003",
+   "kind": "purchase",
+   "no": "ح-2",
+   "date": "2026-08-18",
+   "pay": "credit",
+   "partyId": "smart-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 14.5
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1787000003000
+  },
+  {
+   "id": "smart-inv-004",
+   "kind": "purchase",
+   "no": "ح-3",
+   "date": "2026-08-22",
+   "pay": "credit",
+   "partyId": "smart-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 630
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1787000004000
+  },
+  {
+   "id": "smart-inv-006",
+   "kind": "purchase",
+   "no": "ح-4",
+   "date": "2026-08-29",
+   "pay": "credit",
+   "partyId": "smart-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 875
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1787000006000
+  },
+  {
+   "id": "smart-inv-007",
+   "kind": "purchase",
+   "no": "ح-5",
+   "date": "2026-08-29",
+   "pay": "credit",
+   "partyId": "smart-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 45
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1787000007000
+  },
+  {
+   "id": "smart-inv-008",
+   "kind": "purchase",
+   "no": "ح-6",
+   "date": "2026-09-01",
+   "pay": "credit",
+   "partyId": "smart-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 165
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1787000008000
+  },
+  {
+   "id": "smart-inv-011",
+   "kind": "purchase",
+   "no": "ح-7",
+   "date": "2026-09-30",
+   "pay": "credit",
+   "partyId": "smart-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 2383
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1787000011000
+  },
+  {
+   "id": "smart-inv-012",
+   "kind": "purchase",
+   "no": "ح-8",
+   "date": "2026-09-09",
+   "pay": "credit",
+   "partyId": "smart-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 276
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1787000012000
+  },
+  {
+   "id": "smart-inv-013",
+   "kind": "purchase",
+   "no": "ح-9",
+   "date": "2026-09-13",
+   "pay": "credit",
+   "partyId": "smart-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 300
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1787000013000
+  },
+  {
+   "id": "smart-inv-016",
+   "kind": "purchase",
+   "no": "ح-10",
+   "date": "2026-10-28",
+   "pay": "credit",
+   "partyId": "smart-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 1804.5
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1787000016000
+  }
+ ],
+ "payments": [
+  {
+   "id": "smart-pay-001",
+   "kind": "payment",
+   "date": "2026-08-12",
+   "partyId": "smart-party",
+   "amount": 150,
+   "note": "",
+   "at": 1787000001000
+  },
+  {
+   "id": "smart-pay-002",
+   "kind": "payment",
+   "date": "2026-08-18",
+   "partyId": "smart-party",
+   "amount": 750,
+   "note": "",
+   "at": 1787000002000
+  },
+  {
+   "id": "smart-pay-005",
+   "kind": "payment",
+   "date": "2026-08-29",
+   "partyId": "smart-party",
+   "amount": 765,
+   "note": "",
+   "at": 1787000005000
+  },
+  {
+   "id": "smart-pay-009",
+   "kind": "payment",
+   "date": "2026-09-01",
+   "partyId": "smart-party",
+   "amount": 1056,
+   "note": "",
+   "at": 1787000009000
+  },
+  {
+   "id": "smart-pay-010",
+   "kind": "payment",
+   "date": "2026-10-03",
+   "partyId": "smart-party",
+   "amount": 2221,
+   "note": "",
+   "at": 1787000010000
+  },
+  {
+   "id": "smart-pay-014",
+   "kind": "payment",
+   "date": "2026-10-08",
+   "partyId": "smart-party",
+   "amount": 300,
+   "note": "",
+   "at": 1787000014000
+  },
+  {
+   "id": "smart-pay-015",
+   "kind": "payment",
+   "date": "2026-10-08",
+   "partyId": "smart-party",
+   "amount": 400,
+   "note": "",
+   "at": 1787000015000
+  },
+  {
+   "id": "smart-pay-017",
+   "kind": "payment",
+   "date": "2026-10-28",
+   "partyId": "smart-party",
+   "amount": 715,
+   "note": "",
+   "at": 1787000017000
+  }
+ ]
+}
