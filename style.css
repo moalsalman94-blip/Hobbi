@@ -602,3 +602,11 @@ dialog::backdrop { background: rgba(3, 6, 12, .7); backdrop-filter: blur(4px); -
   }
   #invForm .actions .btn { flex: 1; padding: 12px; }
 }
+
+/* iOS date inputs: keep inside their box */
+input[type="date"] {
+  -webkit-appearance: none; appearance: none; display: block;
+  min-width: 0; max-width: 100%; min-height: 44px; text-align: right;
+}
+input[type="date"]::-webkit-date-and-time-value { text-align: right; }
+.filters > label, .grid > label { min-width: 0; }
