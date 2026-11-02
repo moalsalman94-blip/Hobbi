@@ -791,6 +791,19 @@ function settingsPage() {
         <label class="btn" style="flex-direction:row;color:var(--text)">⬆️ استرجاع نسخة<input type="file" id="imp" accept="application/json,.json" hidden></label>
       </div>
     </div>
+    <div class="card" id="logCard">
+      <h3 style="margin-top:0">📜 سجل الحركات (Log)</h3>
+      <p class="hint">كل الفواتير والسندات المدخلة، الأحدث أولاً. فيك تحذف أي حركة لحالها.</p>
+      <div class="filters" style="margin-bottom:12px">
+        <label>النوع<select id="lt">
+          <option value="">الكل</option>
+          <option value="sale">فواتير البيع</option><option value="purchase">فواتير الشراء</option>
+          <option value="receipt">سندات القبض</option><option value="payment">سندات الصرف</option>
+        </select></label>
+        <label>بحث<input id="lq" placeholder="الاسم أو الرقم"></label>
+      </div>
+      <div id="logList"></div>
+    </div>
     <div class="card">
       <h3 style="margin-top:0">منطقة الخطر</h3>
       <button class="btn danger" type="button" id="wipe">🗑️ مسح كل البيانات</button>
@@ -825,6 +838,43 @@ function settingsPage() {
     r.readAsText(file);
     e.target.value = '';
   };
+  const fmtAt = at => at ? new Date(at).toLocaleString('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+  const drawLog = () => {
+    const t = $('#lt').value, q = $('#lq').value.trim();
+    const rows = [
+      ...db.invoices.map(i => ({ kind: i.kind, id: i.id, at: i.at, no: i.no, date: i.date, party: partyName(i.partyId),
+        label: `فاتورة ${KIND[i.kind]}`, pay: PAYMETHOD[isCredit(i) ? 'credit' : 'cash'], amount: invTotal(i), inv: true })),
+      ...db.payments.map(v => ({ kind: v.kind, id: v.id, at: v.at, no: v.no, date: v.date, party: partyName(v.partyId),
+        label: PAY[v.kind], pay: '', amount: num(v.amount), inv: false }))
+    ].filter(r => !t || r.kind === t)
+     .filter(r => !q || r.party.includes(q) || String(r.no) === q)
+     .sort((a, b) => (b.at || 0) - (a.at || 0));
+    $('#logList').innerHTML = rows.length ? `<div class="table-wrap"><table class="tbl"><thead><tr>
+      <th>وقت الإدخال</th><th>الحركة</th><th>الرقم</th><th>التاريخ</th><th>الحساب</th><th>الدفع</th><th class="num">المبلغ</th><th></th></tr></thead><tbody>
+      ${rows.map(r => `<tr><td class="num">${esc(fmtAt(r.at))}</td><td><span class="tag ${r.kind}">${r.label}</span></td>
+        <td>${esc(r.no)}</td><td>${esc(r.date)}</td><td>${esc(r.party)}</td><td>${r.pay}</td><td class="num">${money(r.amount)}</td>
+        <td><div class="btn-row">${r.inv ? `<a class="btn sm" href="#/invoice/${r.id}">عرض</a>` : ''}
+          <button class="btn sm danger" type="button" data-logdel="${r.kind}:${r.id}">🗑️ حذف</button></div></td></tr>`).join('')}
+      </tbody></table></div><p class="hint">عدد الحركات: ${rows.length}</p>` : '<p class="hint">لا توجد حركات.</p>';
+  };
+  $('#logList').onclick = e => {
+    const b = e.target.closest('[data-logdel]');
+    if (!b) return;
+    const [kind, id] = b.dataset.logdel.split(':');
+    if (KIND[kind]) {
+      const inv = db.invoices.find(x => x.id === id);
+      if (!inv || !confirm(`متأكد بدك تحذف فاتورة ${KIND[kind]} رقم ${inv.no}${getParty(inv.partyId) ? ' — ' + partyName(inv.partyId) : ''} بمبلغ ${money(invTotal(inv))}؟`)) return;
+      db.invoices = db.invoices.filter(x => x.id !== id);
+    } else {
+      const v = db.payments.find(x => x.id === id);
+      if (!v || !confirm(`متأكد بدك تحذف ${PAY[kind]} رقم ${v.no} — ${partyName(v.partyId)} بمبلغ ${money(v.amount)}؟`)) return;
+      db.payments = db.payments.filter(x => x.id !== id);
+    }
+    save(); toast('تم حذف الحركة'); drawLog();
+  };
+  $('#lt').onchange = drawLog; $('#lq').oninput = drawLog;
+  drawLog();
+
   $('#wipe').onclick = () => {
     if (prompt('رح ينمسح كل شي (فواتير، سندات، حسابات، أصناف). للتأكيد اكتب: مسح') !== 'مسح') return;
     db = blankDb(); save(); toast('تم مسح البيانات'); location.hash = '#/home';
