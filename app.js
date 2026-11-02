@@ -716,8 +716,13 @@ function statementPage(arg) {
       </div>
       <div class="print-head">
         <div class="doc-head"><h2>${esc(db.settings.shopName)}</h2><h2>كشف حساب ${PTYPE[p.type]}</h2></div>
-        <div class="doc-meta"><div><span>الاسم: </span><b>${esc(p.name)}</b></div>
-          ${p.phone ? `<div><span>الهاتف: </span>${esc(p.phone)}</div>` : ''}<div>${period}</div></div>
+        <div class="doc-meta"><div><span>${PTYPE[p.type]}: </span><b>${esc(p.name)}</b></div>
+          ${p.phone ? `<div><span>الهاتف: </span><b dir="ltr">${esc(p.phone)}</b></div>` : ''}<div><span>الفترة: </span><b>${period.replace(/^الفترة: /, '')}</b></div></div>
+        <div class="sum-boxes">
+          <div><small>مجموع المدين</small><b>${money(sDr)}</b></div>
+          <div><small>مجموع الدائن</small><b>${money(sCr)}</b></div>
+          <div class="hl"><small>الرصيد ${state === 'مسكّر' ? '' : '(' + state + ')'}</small><b>${money(Math.abs(balance))} ${cur()}</b></div>
+        </div>
       </div>
       ${html}
       <div class="balance-box">${verdict}</div>
@@ -1278,46 +1283,89 @@ function busy(on, text) {
 }
 
 async function shareView() {
-  const title = ($('.page-head h2') || {}).textContent || 'كشف';
+  const title = (($('.page-head h2') || {}).textContent || 'كشف').trim();
   busy(true, 'جاري تجهيز الملف...');
   let sheet;
   try {
     await loadVendor();
-    // نسخة نظيفة من الصفحة بخلفية بيضاء
+    // نسخة نظيفة من الصفحة على ورق أبيض
     const clone = app.cloneNode(true);
     clone.removeAttribute('id');
-    clone.querySelectorAll('.page-head, .filters, .actions, .btn-row, .no-print, .no-pdf, button, input, select, datalist, .combo').forEach(e => e.remove());
+    clone.querySelectorAll('.page-head, .filters, .actions, .btn-row, .no-print, .no-pdf, .doc-head, button, input, select, datalist, .combo, .hint').forEach(e => e.remove());
     clone.querySelectorAll('table.cards').forEach(t => t.classList.remove('cards'));
+    clone.querySelectorAll('.card').forEach(c => { if (!c.textContent.trim()) c.remove(); });
+    const dateStr = new Date().toLocaleDateString('ar', { day: 'numeric', month: 'long', year: 'numeric' });
     sheet = document.createElement('div');
     sheet.className = 'pdf-sheet';
-    const dateStr = today();
-    if (!clone.querySelector('.doc-head')) {
-      sheet.innerHTML = `<div class="doc-head"><h2>${esc(db.settings.shopName)}</h2><h2>${esc(title)}</h2></div><p class="pdf-date">التاريخ: ${dateStr}</p>`;
-    }
+    sheet.innerHTML = `
+      <div class="pdf-head">
+        <div class="brand">${emblem('pdf-emblem')}<div><div class="nm">${esc(db.settings.shopName)}</div><div class="tg">كشوفات ومستندات مالية</div></div></div>
+        <div class="doc"><div class="tt">${esc(title)}</div><div class="dt">${dateStr}</div></div>
+      </div>
+      <div class="pdf-rule"><span></span><i></i><span></span></div>`;
     sheet.appendChild(clone);
     document.body.appendChild(sheet);
     await (document.fonts ? document.fonts.ready : Promise.resolve());
 
     const w = sheet.offsetWidth, h = sheet.offsetHeight;
-    const scale = Math.max(1, Math.min(2, Math.sqrt(14e6 / (w * h))));
+    const scale = Math.max(1.2, Math.min(2, Math.sqrt(16e6 / (w * h))));
+    // حدود الأسطر لتجنب قص سطر بين صفحتين
+    const top0 = sheet.getBoundingClientRect().top;
+    const Y = el => { const r = el.getBoundingClientRect(); return [(r.top - top0) * scale, (r.bottom - top0) * scale]; };
+    const breaks = [...sheet.querySelectorAll('tbody tr, tfoot tr, .doc-sum, .balance-box, .sum-boxes, .doc-meta, .report-total, .stats, p')]
+      .map(el => Y(el)[1]).sort((a, b) => a - b);
+    const tables = [...sheet.querySelectorAll('table')].map(t => { const th = t.querySelector('thead'); return th ? { head: Y(th), body: Y(t) } : null; }).filter(Boolean);
+
     const canvas = await html2canvas(sheet, { scale, backgroundColor: '#ffffff', useCORS: true, logging: false, windowWidth: w, scrollX: 0, scrollY: -window.scrollY });
+    const W = canvas.width, PH = Math.floor(W * 297 / 210);
+    const footH = Math.round(44 * scale), topM = Math.round(34 * scale);
+
+    // تقسيم الصفحات
+    const pages = [];
+    let y = 0;
+    while (y < canvas.height - 2) {
+      const first = !pages.length;
+      const tbl = tables.find(t => y > t.head[1] && y < t.body[1]);
+      const headH = !first && tbl ? tbl.head[1] - tbl.head[0] : 0;
+      const room = PH - footH - (first ? 0 : topM) - headH;
+      let end = Math.min(canvas.height, y + room);
+      if (end < canvas.height) {
+        const b = breaks.filter(v => v > y + 40 * scale && v <= end).pop();
+        if (b) end = b;
+      }
+      pages.push({ y, end, tbl: headH ? tbl : null });
+      y = end;
+    }
 
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'portrait' });
     const pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight();
-    const sliceH = Math.floor(canvas.width * ph / pw);
     const part = document.createElement('canvas');
-    part.width = canvas.width;
-    for (let y = 0, page = 0; y < canvas.height; y += sliceH, page++) {
-      const hh = Math.min(sliceH, canvas.height - y);
-      part.height = hh;
-      const ctx = part.getContext('2d');
-      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, part.width, hh);
-      ctx.drawImage(canvas, 0, y, canvas.width, hh, 0, 0, canvas.width, hh);
-      if (page) pdf.addPage();
-      pdf.addImage(part.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, pw, hh * pw / canvas.width);
-    }
-    const name = `${title} - ${dateStr}.pdf`.replace(/[\\/:*?"<>|]/g, '-');
+    part.width = W; part.height = PH;
+    const ctx = part.getContext('2d');
+    pages.forEach((pg, i) => {
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, PH);
+      let dy = i ? topM : 0;
+      if (pg.tbl) {
+        const [a, b] = pg.tbl.head;
+        ctx.drawImage(canvas, 0, a, W, b - a, 0, dy, W, b - a);
+        dy += b - a;
+      }
+      ctx.drawImage(canvas, 0, pg.y, W, pg.end - pg.y, 0, dy, W, pg.end - pg.y);
+      // تذييل
+      const fy = PH - footH + 12 * scale, pad = 30 * scale;
+      ctx.strokeStyle = '#c9a227'; ctx.lineWidth = 1.2 * scale;
+      ctx.beginPath(); ctx.moveTo(pad, fy); ctx.lineTo(W - pad, fy); ctx.stroke();
+      ctx.fillStyle = '#6b7280'; ctx.font = `${11 * scale}px Tajawal, Tahoma, sans-serif`;
+      ctx.direction = 'rtl'; ctx.textAlign = 'right';
+      ctx.fillText(`${db.settings.shopName} — ${title}`, W - pad, fy + 18 * scale);
+      ctx.textAlign = 'left';
+      ctx.fillText(`صفحة ${i + 1} من ${pages.length}`, pad, fy + 18 * scale);
+      if (i) pdf.addPage();
+      pdf.addImage(part.toDataURL('image/jpeg', 0.93), 'JPEG', 0, 0, pw, ph);
+    });
+
+    const name = `${title} - ${today()}.pdf`.replace(/[\\/:*?"<>|]/g, '-');
     const file = new File([pdf.output('blob')], name, { type: 'application/pdf' });
     busy(false);
     if (navigator.canShare && navigator.canShare({ files: [file] })) {

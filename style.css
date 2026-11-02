@@ -610,3 +610,63 @@ input[type="date"] {
 }
 input[type="date"]::-webkit-date-and-time-value { text-align: right; }
 .filters > label, .grid > label { min-width: 0; }
+
+/* =========================================================
+   PDF v2 — branded, formal document
+   ========================================================= */
+.pdf-sheet { padding: 30px 34px 26px; color: #1f2937; font-size: 13.5px; line-height: 1.5; }
+.pdf-head { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+.pdf-head .brand { display: flex; align-items: center; gap: 14px; }
+.pdf-head .pdf-emblem { width: 64px; height: 64px; }
+.pdf-head .nm { font-family: "Reem Kufi", "Tajawal", sans-serif; font-size: 26px; font-weight: 700; color: #0f172a; line-height: 1.2; }
+.pdf-head .tg { color: #9a7b1c; font-size: 12px; letter-spacing: 0; }
+.pdf-head .doc { text-align: left; }
+.pdf-head .tt {
+  display: inline-block; padding: 6px 16px; border-radius: 8px; background: #0f172a; color: #f3dd8b;
+  font-size: 16px; font-weight: 800;
+}
+.pdf-head .dt { color: #6b7280; font-size: 12px; margin-top: 6px; }
+.pdf-rule { display: flex; align-items: center; gap: 10px; margin: 14px 0 18px; }
+.pdf-rule span { flex: 1; height: 2px; background: linear-gradient(90deg, #c9a227, #f3dd8b, #c9a227); }
+.pdf-rule i { width: 9px; height: 9px; background: #c9a227; transform: rotate(45deg); }
+
+.pdf-sheet .card { margin: 0 0 12px; }
+.pdf-sheet .doc-meta {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px;
+}
+.pdf-sheet .doc-meta > div {
+  padding: 9px 12px !important; border-radius: 8px; border: 1px solid #e5e7eb !important; background: #f9fafb !important;
+}
+.pdf-sheet .doc-meta > div span { display: block !important; color: #6b7280; font-size: 11px; }
+.pdf-sheet .doc-meta > div b { color: #0f172a; font-size: 14px; }
+
+.pdf-sheet .sum-boxes { display: grid; grid-template-columns: 1fr 1fr 1.3fr; gap: 10px; margin-bottom: 16px; }
+.pdf-sheet .sum-boxes > div { padding: 10px 14px; border-radius: 8px; border: 1px solid #e5e7eb; background: #fff; }
+.pdf-sheet .sum-boxes small { display: block; color: #6b7280; font-size: 11px; }
+.pdf-sheet .sum-boxes b { font-size: 17px; color: #0f172a; direction: ltr; display: block; text-align: right; }
+.pdf-sheet .sum-boxes .hl { background: #0f172a; border-color: #0f172a; }
+.pdf-sheet .sum-boxes .hl small { color: #cbd5e1; }
+.pdf-sheet .sum-boxes .hl b { color: #f3dd8b; }
+
+.pdf-sheet .tbl { border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+.pdf-sheet .tbl th, .pdf-sheet .tbl td { padding: 8px 10px; border-bottom: 1px solid #eef0f3; color: #1f2937; }
+.pdf-sheet .tbl thead th { background: #0f172a !important; color: #f3dd8b !important; font-size: 12px; border: 0; }
+.pdf-sheet .tbl tbody tr:nth-child(even) td { background: #f8fafc; }
+.pdf-sheet .tbl tfoot th { background: #fdf6e3 !important; color: #0f172a !important; border-top: 2px solid #c9a227; font-weight: 800; }
+.pdf-sheet .tbl .num { font-variant-numeric: tabular-nums; }
+.pdf-sheet .tbl small { color: #6b7280; }
+.pdf-sheet .owes { color: #b91c1c !important; }
+.pdf-sheet .cred { color: #047857 !important; }
+.pdf-sheet .tag { border: 1px solid #d1d5db; color: #374151; background: #fff; }
+.pdf-sheet .avatar { display: none; }
+
+.pdf-sheet .doc-sum { max-width: 300px; margin: 14px 0 0 auto; margin-inline-start: auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+.pdf-sheet .doc-sum div { padding: 7px 12px; border-bottom: 1px solid #eef0f3; }
+.pdf-sheet .doc-sum div:last-child { background: #0f172a; color: #f3dd8b; border: 0; font-weight: 800; }
+.pdf-sheet .balance-box { margin-top: 14px; border: 0; border-radius: 8px; background: #0f172a; color: #f3dd8b; font-size: 15px; }
+.pdf-sheet .report-total { border: 1px solid #e5e7eb; background: #f9fafb; }
+.pdf-sheet .report-total b { color: #0f172a; }
+.pdf-sheet .stat { border: 1px solid #e5e7eb !important; padding: 12px !important; border-radius: 8px; }
+.pdf-sheet .stat .go { display: none; }
+.pdf-sheet * { letter-spacing: 0 !important; }
+.pdf-sheet .doc-sum { margin: 14px 0 0 0; margin-right: auto; }
