@@ -220,3 +220,6 @@ dialog { max-height: 90dvh; overflow-y: auto; }
 @media (max-width: 899px) {
   dialog { margin-top: 12px; }
 }
+
+.tile.statement { background: #334155; grid-column: 1 / -1; min-height: 110px; }
+@media (min-width: 900px) { .tiles { grid-template-columns: repeat(5, 1fr); } .tile.statement { grid-column: auto; min-height: 140px; } }

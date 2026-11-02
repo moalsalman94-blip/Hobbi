@@ -291,6 +291,7 @@ function home() {
       <a class="tile sale" href="#/new/sale"><span class="ic">🧾</span>فاتورة بيع</a>
       <button class="tile receipt" type="button" id="qReceipt"><span class="ic">💵</span>سند قبض</button>
       <button class="tile payment" type="button" id="qPayment"><span class="ic">💸</span>سند صرف</button>
+      <a class="tile statement" href="#/statement/all"><span class="ic">📄</span>كشف حساب</a>
     </div>
     <div class="stats">
       <div class="stat"><div class="k">مبيعات اليوم</div><div class="v">${money(sum('sale', d => d === t))} ${c}</div></div>
@@ -700,27 +701,32 @@ function itemsPage() {
 
 /* ----- كشف حساب ----- */
 function statementPage(arg) {
-  const st = statementPage.state || (statementPage.state = { from: '', to: '' });
+  const st = statementPage.state || (statementPage.state = { from: '', to: '', all: false });
   const p = getParty(arg);
+  // all = كشف عام بيختار منه أي عميل أو مورد
+  if (!p) st.all = !PTYPE[arg];
+  const all = st.all;
   const type = p ? p.type : (PTYPE[arg] ? arg : 'customer');
   const partyId = p ? p.id : '';
+  const types = all ? ['customer', 'supplier'] : [type];
+  const pickLbl = all ? 'العميل أو المورد' : (type === 'customer' ? 'العميل' : 'المورد');
   app.innerHTML = `
-    <div class="page-head"><h2>كشف حساب ${PTYPE[type]}</h2>
+    <div class="page-head"><h2>${all && !p ? 'كشف حساب' : 'كشف حساب ' + PTYPE[type]}</h2>
       <div class="btn-row">${p ? `<button class="btn primary" type="button" onclick="print()">🖨️ طباعة</button>
         <button class="btn" type="button" id="stPay">${p.type === 'customer' ? '💵 سند قبض' : '💸 سند صرف'}</button>` : ''}</div></div>
     <div class="card filters">
-      <label>${type === 'customer' ? 'العميل' : 'المورد'}<select id="sp"><option value="">— اختر —</option>${partyOptions(partyId, [type])}</select></label>
+      <label>${pickLbl}<select id="sp"><option value="">— اختر —</option>${partyOptions(partyId, types)}</select></label>
       <label>من تاريخ<input id="sf" type="date" value="${st.from}"></label>
       <label>إلى تاريخ<input id="stt" type="date" value="${st.to}"></label>
     </div>
     <div class="card" id="stBody"></div>`;
 
-  $('#sp').onchange = e => { location.hash = '#/statement/' + (e.target.value || type); };
+  $('#sp').onchange = e => { location.hash = '#/statement/' + (e.target.value || (all ? 'all' : type)); };
   const draw = () => {
     st.from = $('#sf').value; st.to = $('#stt').value;
     if (!p) {
-      $('#stBody').innerHTML = db.parties.some(x => x.type === type) ? `<p class="hint">اختر ${type === 'customer' ? 'العميل' : 'المورد'} من فوق.</p>`
-        : `<p class="hint">لا يوجد ${PTYPES[type]} بعد.</p>`;
+      $('#stBody').innerHTML = db.parties.some(x => types.includes(x.type)) ? `<p class="hint">اختر ${pickLbl} من فوق.</p>`
+        : `<p class="hint">لا يوجد ${all ? 'عملاء أو موردين' : PTYPES[type]} بعد.</p>`;
       return;
     }
     const { html, balance } = statementTable(partyEntries(p), st.from, st.to, { dr: 'مدين (عليه)', cr: 'دائن (له)', bal: partyBal });
@@ -843,11 +849,11 @@ function render() {
   $('#shopTitle').textContent = shop;
   document.title = `${shop} — محاسبة`;
   let navArg = decodeURIComponent(arg);
-  if (name === 'statement' && getParty(navArg)) navArg = getParty(navArg).type;
+  if (name === 'statement' && getParty(navArg)) navArg = statementPage.state?.all ? 'all' : getParty(navArg).type;
   if (name === 'payments' && !PAY[navArg]) navArg = 'receipt';
   if (name === 'parties' && !PTYPE[navArg]) navArg = 'customer';
   if (name === 'invoices' && !KIND[navArg]) navArg = 'sale';
-  if (name === 'statement' && !PTYPE[navArg]) navArg = 'customer';
+  if (name === 'statement' && !PTYPE[navArg]) navArg = 'all';
   const full = '#/' + [name, navArg].filter(Boolean).join('/');
   $$('#nav a').forEach(a => {
     const h = a.getAttribute('href');
