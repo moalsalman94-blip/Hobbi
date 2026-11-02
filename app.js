@@ -285,7 +285,7 @@ function home() {
   const c = `<small>${cur()}</small>`;
 
   app.innerHTML = `
-    <div class="welcome"><h2>${esc(db.settings.shopName)}</h2><p>شو بدك تعمل اليوم؟</p></div>
+    <div class="welcome"><h2>${esc(db.settings.shopName)}</h2></div>
     <div class="tiles">
       <a class="tile purchase" href="#/new/purchase"><span class="ic">📦</span>فاتورة شراء</a>
       <a class="tile sale" href="#/new/sale"><span class="ic">🧾</span>فاتورة بيع</a>
