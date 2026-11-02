@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=18">
+  <link rel="stylesheet" href="style.css?v=20">
 </head>
 <body>
   <header class="topbar no-print">
@@ -42,10 +42,18 @@
 
   <main id="app"></main>
 
+  <nav id="tabbar" class="no-print">
+    <a href="#/home" data-tab="home" data-ic="home"><span>الرئيسية</span></a>
+    <a href="#/invoices/sale" data-tab="sale" data-ic="sale"><span>المبيعات</span></a>
+    <a href="#/statement/all" data-tab="statement" data-ic="ledger" class="center"><span>كشف حساب</span></a>
+    <a href="#/invoices/purchase" data-tab="purchase" data-ic="purchase"><span>المشتريات</span></a>
+    <a href="#/reports" data-tab="reports" data-ic="chart"><span>التقارير</span></a>
+  </nav>
+
   <dialog id="dlg"><form id="dlgForm" novalidate></form></dialog>
   <div id="toast" class="no-print"></div>
 
-  <script src="firebase-config.js?v=18"></script>
-  <script src="app.js?v=18"></script>
+  <script src="firebase-config.js?v=20"></script>
+  <script src="app.js?v=20"></script>
 </body>
 </html>

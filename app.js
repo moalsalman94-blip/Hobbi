@@ -109,6 +109,7 @@ const getItem = id => db.items.find(i => i.id === id);
 const partyName = id => getParty(id)?.name || '—';
 const isCredit = inv => inv.pay === 'credit' && !!inv.partyId;
 const cur = () => esc(db.settings.currency);
+const initial = n => (String(n || '').replace(/^(ال|مؤسسة|شركة)\s*/, '').trim()[0] || '؟');
 
 const subTotal = inv => round(inv.lines.reduce((s, l) => s + num(l.qty) * num(l.price), 0));
 const invTotal = inv => round(subTotal(inv) - num(inv.discount));
@@ -259,7 +260,7 @@ function paymentDialog(pm, kind, partyId, after) {
   if (!db.parties.some(p => p.type === ptype)) { alert(`أضف ${PTYPE[ptype]} أولاً من صفحة ${PTYPES[ptype]}`); return; }
   openDialog(isNew ? `${PAY[kind]} جديد` : `تعديل ${PAY[kind]} رقم ${pm.no}`, `
     <p class="hint" style="margin:0">${kind === 'receipt' ? 'استلام مبلغ من عميل' : 'دفع مبلغ لمورد'}</p>
-    <div class="grid">
+    <div class="grid g2">
       <label>الرقم<input name="no" type="number" min="1" required value="${esc(pm.no)}"></label>
       <label>التاريخ<input name="date" type="date" required value="${esc(pm.date)}"></label>
     </div>
@@ -358,7 +359,7 @@ function invoiceForm(inv, isNew) {
   app.innerHTML = `
     <div class="page-head"><h2>${isNew ? `فاتورة ${KIND[kind]} جديدة` : `تعديل فاتورة ${KIND[kind]} رقم ${esc(inv.no)}`}</h2></div>
     <form id="invForm" class="card" novalidate>
-      <div class="grid">
+      <div class="grid g2">
         <label>رقم الفاتورة<input name="no" type="number" min="1" required value="${esc(inv.no)}"></label>
         <label>التاريخ<input name="date" type="date" required value="${esc(inv.date)}"></label>
       </div>
@@ -367,10 +368,10 @@ function invoiceForm(inv, isNew) {
         <label class="radio"><input type="radio" name="pay" value="cash" ${inv.pay !== 'credit' ? 'checked' : ''}> نقدي</label>
         <label class="radio"><input type="radio" name="pay" value="credit" ${inv.pay === 'credit' ? 'checked' : ''}> ذمم (على الحساب)</label>
       </div>
-      <div class="grid">
+      <div class="grid party-row">
         <label><span id="partyLbl"></span>
           <select name="partyId" id="partySel"></select></label>
-        <button type="button" class="btn" id="addParty">${PTYPE[ptype]} جديد</button>
+        <button type="button" class="btn" id="addParty">+ <span class="hide-sm">${PTYPE[ptype]} جديد</span></button>
       </div>
       <p class="hint" id="payHint"></p>
 
@@ -509,7 +510,7 @@ function viewInvoice(id) {
   app.innerHTML = `
     <div class="page-head"><h2>فاتورة ${KIND[inv.kind]} رقم ${esc(inv.no)}</h2>
       <div class="btn-row">
-        <button class="btn primary" type="button" data-share>${icon('share')} مشاركة</button><button class="btn" type="button" onclick="print()">طباعة</button>
+        <button class="btn primary" type="button" data-share>${icon('share')} مشاركة</button><button class="btn btn-print" type="button" onclick="print()">طباعة</button>
         <a class="btn" href="#/edit/${inv.id}">تعديل</a>
         ${party && cr ? `<a class="btn" href="#/statement/${party.id}">كشف حساب</a>` : ''}
         <button class="btn danger" type="button" id="delInv">حذف</button>
@@ -547,7 +548,7 @@ function invoicesList(kind) {
   app.innerHTML = `
     <div class="page-head"><h2>فواتير ${kind === 'sale' ? 'البيع' : 'الشراء'}</h2>
       <div class="btn-row"><a class="btn primary" href="#/new/${kind}">فاتورة ${KIND[kind]} جديدة</a>
-      <button class="btn primary" type="button" data-share>${icon('share')} مشاركة</button><button class="btn" type="button" onclick="print()">طباعة</button></div></div>
+      <button class="btn primary" type="button" data-share>${icon('share')} مشاركة</button><button class="btn btn-print" type="button" onclick="print()">طباعة</button></div></div>
     <div class="card filters">
       <label>بحث<input id="fq" placeholder="اسم الحساب أو رقم الفاتورة"></label>
       <label>من تاريخ<input id="ff" type="date"></label>
@@ -577,7 +578,7 @@ function paymentsPage(kind) {
     <div class="page-head"><h2>${kind === 'receipt' ? 'سندات القبض' : 'سندات الصرف'}</h2>
       <div class="btn-row">
         <button class="btn primary" type="button" id="nV">${PAY[kind]} جديد</button>
-        <button class="btn primary" type="button" data-share>${icon('share')} مشاركة</button><button class="btn" type="button" onclick="print()">طباعة</button>
+        <button class="btn primary" type="button" data-share>${icon('share')} مشاركة</button><button class="btn btn-print" type="button" onclick="print()">طباعة</button>
       </div></div>
     <div class="card filters">
       <label>بحث<input id="pq" placeholder="اسم ${who} أو ملاحظة"></label>
@@ -626,7 +627,7 @@ function partiesPage(type) {
   app.innerHTML = `
     <div class="page-head"><h2>${PTYPES[type]}</h2>
       <div class="btn-row"><button class="btn primary" type="button" id="addP">${PTYPE[type]} جديد</button>
-      <button class="btn primary" type="button" data-share>${icon('share')} مشاركة</button><button class="btn" type="button" onclick="print()">طباعة</button></div></div>
+      <button class="btn primary" type="button" data-share>${icon('share')} مشاركة</button><button class="btn btn-print" type="button" onclick="print()">طباعة</button></div></div>
     <div class="card filters"><label>بحث<input id="sq" placeholder="الاسم أو الهاتف"></label>
       <label>عرض<select id="sf"><option value="">الكل</option><option value="nz">اللي إلهم أو عليهم رصيد</option></select></label></div>
     <div class="card" id="pList"></div>`;
@@ -640,7 +641,7 @@ function partiesPage(type) {
     const total = list.reduce((s, x) => s + x.b, 0);
     $('#pList').innerHTML = list.length ? `<div class="table-wrap"><table class="tbl"><thead><tr>
       <th>الاسم</th><th>الهاتف</th><th class="num">الرصيد</th><th></th></tr></thead><tbody>
-      ${list.map(({ p, b }) => `<tr class="clickable" data-href="#/statement/${p.id}"><td>${esc(p.name)}</td><td>${esc(p.phone)}</td><td class="num">${partyBal(b)}</td>
+      ${list.map(({ p, b }) => `<tr class="clickable" data-href="#/statement/${p.id}"><td><span class="who-cell"><span class="avatar">${esc(initial(p.name))}</span>${esc(p.name)}</span></td><td>${esc(p.phone)}</td><td class="num">${partyBal(b)}</td>
         <td><div class="btn-row"><a class="btn sm" href="#/statement/${p.id}">كشف حساب</a>
         <button class="btn sm" data-edit="${p.id}">تعديل</button><button class="btn sm danger" data-del="${p.id}">حذف</button></div></td></tr>`).join('')}
       </tbody><tfoot><tr><th colspan="2">الإجمالي (${list.length})</th><th class="num">${partyBal(total)}</th><th></th></tr></tfoot></table></div>`
@@ -676,7 +677,7 @@ function statementPage(arg) {
   const pickLbl = all ? 'العميل أو المورد' : (type === 'customer' ? 'العميل' : 'المورد');
   app.innerHTML = `
     <div class="page-head"><h2>${all && !p ? 'كشف حساب' : 'كشف حساب ' + PTYPE[type]}</h2>
-      <div class="btn-row">${p ? `<button class="btn primary" type="button" data-share>${icon('share')} مشاركة</button><button class="btn" type="button" onclick="print()">طباعة</button>
+      <div class="btn-row">${p ? `<button class="btn primary" type="button" data-share>${icon('share')} مشاركة</button><button class="btn btn-print" type="button" onclick="print()">طباعة</button>
         <button class="btn" type="button" id="stPay">${p.type === 'customer' ? 'سند قبض' : 'سند صرف'}</button>` : ''}</div></div>
     <div class="card filters">
       <label>${pickLbl}<select id="sp"><option value="">— اختر —</option>${partyOptions(partyId, types)}</select></label>
@@ -699,10 +700,25 @@ function statementPage(arg) {
     let verdict = 'الحساب مسكّر (الرصيد صفر)';
     if (balance > 0) verdict = `الرصيد المستحق على ${esc(p.name)}: ${money(balance)} ${cur()}`;
     if (balance < 0) verdict = `الرصيد المستحق لـ ${esc(p.name)}: ${money(-balance)} ${cur()}`;
+    const ents = partyEntries(p).filter(e => (!st.from || (e.date || '') >= st.from) && (!st.to || !e.date || e.date <= st.to));
+    const sDr = ents.reduce((a, e) => a + e.debit, 0), sCr = ents.reduce((a, e) => a + e.credit, 0);
+    const state = balance > 0 ? 'عليه' : balance < 0 ? 'له' : 'مسكّر';
     $('#stBody').innerHTML = `
-      <div class="doc-head"><h2>${esc(db.settings.shopName)}</h2><h2>كشف حساب ${PTYPE[p.type]}</h2></div>
-      <div class="doc-meta"><div><span>الاسم: </span><b>${esc(p.name)}</b></div>
-        ${p.phone ? `<div><span>الهاتف: </span>${esc(p.phone)}</div>` : ''}<div>${period}</div></div>
+      <div class="stmt-hero no-pdf">
+        <div class="who"><span class="avatar lg">${esc(initial(p.name))}</span>
+          <div><div class="nm">${esc(p.name)}</div><div class="sub">${PTYPE[p.type]}${p.phone ? ' · <span dir="ltr">' + esc(p.phone) + '</span>' : ''} · ${period}</div></div></div>
+        <div class="bal ${balance > 0 ? 'owes' : balance < 0 ? 'cred' : ''}"><small>الرصيد</small><b>${money(Math.abs(balance))}</b><span>${cur()} · ${state}</span></div>
+        <div class="mini">
+          <div><small>مجموع المدين</small><b>${money(sDr)}</b></div>
+          <div><small>مجموع الدائن</small><b>${money(sCr)}</b></div>
+          <div><small>عدد الحركات</small><b>${ents.length}</b></div>
+        </div>
+      </div>
+      <div class="print-head">
+        <div class="doc-head"><h2>${esc(db.settings.shopName)}</h2><h2>كشف حساب ${PTYPE[p.type]}</h2></div>
+        <div class="doc-meta"><div><span>الاسم: </span><b>${esc(p.name)}</b></div>
+          ${p.phone ? `<div><span>الهاتف: </span>${esc(p.phone)}</div>` : ''}<div>${period}</div></div>
+      </div>
       ${html}
       <div class="balance-box">${verdict}</div>
       <p class="hint no-print">كشف الحساب بيعرض فواتير الذمم والسندات بس. الفواتير النقدية ما بتظهر فيه.</p>`;
@@ -756,7 +772,7 @@ function reportPage(key) {
     sub = `عدد ${PTYPES[type]}: ${list.length}`;
     body = list.length ? `<div class="table-wrap"><table class="tbl"><thead><tr>
       <th>${type === 'customer' ? 'العميل' : 'المورد'}</th><th>الهاتف</th><th class="num">${type === 'customer' ? 'المبلغ المستحق عليه' : 'المبلغ المستحق له'}</th><th></th></tr></thead><tbody>
-      ${list.map(({ p, b }) => `<tr class="clickable" data-href="#/statement/${p.id}"><td>${esc(p.name)}</td><td>${esc(p.phone)}</td>
+      ${list.map(({ p, b }) => `<tr class="clickable" data-href="#/statement/${p.id}"><td><span class="who-cell"><span class="avatar">${esc(initial(p.name))}</span>${esc(p.name)}</span></td><td>${esc(p.phone)}</td>
         <td class="num">${money(b)}</td><td><a class="btn sm" href="#/statement/${p.id}">كشف حساب</a></td></tr>`).join('')}
       </tbody><tfoot><tr><th colspan="2">الإجمالي</th><th class="num">${money(total)}</th><th></th></tr></tfoot></table></div>`
       : '<p class="hint">ما في ديون.</p>';
@@ -771,7 +787,7 @@ function reportPage(key) {
 
   app.innerHTML = `
     <div class="page-head"><h2>${REPORTS[key]}</h2>
-      <div class="btn-row"><a class="btn" href="#/reports">→ رجوع للتقارير</a><button class="btn primary" type="button" data-share>${icon('share')} مشاركة</button><button class="btn" type="button" onclick="print()">طباعة</button></div></div>
+      <div class="btn-row"><a class="btn" href="#/reports">→ رجوع للتقارير</a><button class="btn primary" type="button" data-share>${icon('share')} مشاركة</button><button class="btn btn-print" type="button" onclick="print()">طباعة</button></div></div>
     <div class="card">
       <div class="print-only"><div class="doc-head"><h2>${esc(db.settings.shopName)}</h2><h2>${REPORTS[key]}</h2></div></div>
       <div class="report-total"><span>${REPORTS[key]}</span><b>${money(total)} <small>${c}</small></b><span class="hint">${sub}</span></div>
@@ -849,7 +865,7 @@ function cashPage() {
   const st = cashPage.state || (cashPage.state = { from: '', to: '' });
   app.innerHTML = `
     <div class="page-head"><h2>رصيد الصندوق</h2>
-      <div class="btn-row"><a class="btn" href="#/reports">→ رجوع للتقارير</a><button class="btn primary" type="button" data-share>${icon('share')} مشاركة</button><button class="btn" type="button" onclick="print()">طباعة</button></div></div>
+      <div class="btn-row"><a class="btn" href="#/reports">→ رجوع للتقارير</a><button class="btn primary" type="button" data-share>${icon('share')} مشاركة</button><button class="btn btn-print" type="button" onclick="print()">طباعة</button></div></div>
     <div class="card filters">
       <label>من تاريخ<input id="cf" type="date" value="${st.from}"></label>
       <label>إلى تاريخ<input id="ct" type="date" value="${st.to}"></label>
@@ -1270,7 +1286,8 @@ async function shareView() {
     // نسخة نظيفة من الصفحة بخلفية بيضاء
     const clone = app.cloneNode(true);
     clone.removeAttribute('id');
-    clone.querySelectorAll('.page-head, .filters, .actions, .btn-row, .no-print, button, input, select, datalist, .combo').forEach(e => e.remove());
+    clone.querySelectorAll('.page-head, .filters, .actions, .btn-row, .no-print, .no-pdf, button, input, select, datalist, .combo').forEach(e => e.remove());
+    clone.querySelectorAll('table.cards').forEach(t => t.classList.remove('cards'));
     sheet = document.createElement('div');
     sheet.className = 'pdf-sheet';
     const dateStr = today();
@@ -1383,6 +1400,69 @@ function comboSelect(sel) {
   sync();
 }
 
+/* ---------- تحسينات العرض: جداول كبطاقات على التلفون + أيقونات العناوين ---------- */
+function cardify(root = app) {
+  const PRI = ['البيان', 'الاسم', 'الحساب', 'العميل', 'المورد', 'الصنف'];
+  const AMT = ['الرصيد', 'الصافي', 'المبلغ', 'المجموع'];
+  for (const t of root.querySelectorAll('table.tbl')) {
+    const ths = [...t.querySelectorAll('thead th')].map(th => th.textContent.trim());
+    if (!ths.length) continue;
+    t.classList.add('cards');
+    let ti = -1;
+    for (const h of PRI) { const i = ths.indexOf(h); if (i >= 0) { ti = i; break; } }
+    const di = ths.findIndex(h => h === 'التاريخ' || h === 'وقت الإدخال');
+    let ai = -1; ths.forEach((h, i) => { if (AMT.includes(h)) ai = i; });
+    for (const tr of t.querySelectorAll('tbody tr:not([data-c]), tfoot tr:not([data-c])')) {
+      tr.dataset.c = '1';
+      const body = tr.parentNode.tagName === 'TBODY';
+      let col = 0;
+      for (const cell of [...tr.children]) {
+        const span = cell.colSpan || 1;
+        cell.dataset.label = span > 1 ? '' : (ths[col] || '');
+        if (!cell.querySelector('input, select, textarea')) {
+          const w = document.createElement('span'); w.className = 'cv';
+          while (cell.firstChild) w.appendChild(cell.firstChild);
+          cell.appendChild(w);
+        }
+        if (!cell.textContent.trim() && !cell.querySelector('input, select, button, a')) cell.classList.add('is-empty');
+        if (body && span === 1) {
+          if (col === ti) cell.classList.add('c-title');
+          if (col === di) cell.classList.add('c-date');
+          if (col === ai) cell.classList.add('c-amt');
+          if (ths[col] === '#') cell.classList.add('is-empty');
+        }
+        if (!body && col === 0) cell.classList.add('c-foot');
+        col += span;
+      }
+    }
+  }
+}
+
+const HEAD_IC = { home: 'home', invoices: a => a === 'purchase' ? 'purchase' : 'sale', new: a => a === 'purchase' ? 'purchase' : 'sale',
+  edit: 'sale', invoice: 'sale', payments: a => a === 'payment' ? 'moneyOut' : 'moneyIn', parties: a => a === 'supplier' ? 'truck' : 'users',
+  statement: 'ledger', reports: 'chart', report: 'chart', cash: 'chart', settings: 'gear', import: 'list' };
+function decorate(name, arg) {
+  const h = $('.page-head h2', app);
+  if (h && !h.querySelector('.ph-ic')) {
+    const ic = typeof HEAD_IC[name] === 'function' ? HEAD_IC[name](arg) : HEAD_IC[name];
+    if (ic) h.insertAdjacentHTML('afterbegin', `<span class="ph-ic">${icon(ic)}</span>`);
+  }
+  cardify();
+}
+
+function setTab(name, arg) {
+  const grp = { home: 'home', reports: 'reports', report: 'reports', cash: 'reports', statement: 'statement' }[name]
+    || (['invoices', 'new'].includes(name) ? (arg === 'purchase' ? 'purchase' : 'sale')
+      : name === 'payments' ? (arg === 'payment' ? 'purchase' : 'sale')
+      : name === 'parties' ? (arg === 'supplier' ? 'purchase' : 'sale') : '');
+  $$('#tabbar a').forEach(a => a.classList.toggle('active', a.dataset.tab === grp));
+}
+
+new MutationObserver(() => {
+  cancelAnimationFrame(decorate.raf);
+  decorate.raf = requestAnimationFrame(() => cardify());
+}).observe(app, { childList: true, subtree: true });
+
 /* ---------- التوجيه ---------- */
 const routes = {
   home, new: newInvoice, edit: editInvoice, invoice: viewInvoice, invoices: invoicesList,
@@ -1415,6 +1495,8 @@ function render(soft) {
   }
   const y = window.scrollY;
   fn(decodeURIComponent(arg));
+  decorate(name, decodeURIComponent(arg));
+  setTab(name, decodeURIComponent(arg));
   window.scrollTo(0, soft ? y : 0);
 }
 
