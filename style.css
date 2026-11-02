@@ -212,3 +212,11 @@ dialog::backdrop { background: rgba(0,0,0,.35); }
 .radio:has(input:checked) { border-color: var(--primary); background: #e3f1ef; font-weight: 700; }
 .tag.cash { background: #ddf3ef; color: var(--sale); }
 .tag.credit { background: #fde2e1; color: var(--danger); }
+
+/* ---------- Mobile keyboard: no auto-zoom, no layout jump ---------- */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+input, select, textarea { font-size: 16px !important; }
+dialog { max-height: 90dvh; overflow-y: auto; }
+@media (max-width: 899px) {
+  dialog { margin-top: 12px; }
+}
