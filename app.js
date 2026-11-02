@@ -741,6 +741,26 @@ const REPORTS = {
   'payables': 'ديون علينا للموردين'
 };
 
+function reportsPage() {
+  const t = today(), m = t.slice(0, 7);
+  const sum = (kind, pred) => db.invoices.filter(i => i.kind === kind && pred(i.date || '')).reduce((s, i) => s + invTotal(i), 0);
+  const recv = db.parties.filter(p => p.type === 'customer').reduce((s, p) => s + Math.max(0, partyBalance(p)), 0);
+  const payable = db.parties.filter(p => p.type === 'supplier').reduce((s, p) => s + Math.max(0, -partyBalance(p)), 0);
+  const c = `<small>${cur()}</small>`;
+  const card = (href, ic, k, v, cls = '') => `<a class="stat link" href="${href}">
+      <div class="k">${ic} ${k}</div><div class="v ${cls}">${v} ${c}</div><div class="go">عرض الحركات ←</div></a>`;
+  app.innerHTML = `
+    <div class="page-head"><h2>التقارير</h2></div>
+    <div class="stats">
+      ${card('#/report/sales-today', '📈', 'مبيعات اليوم', money(sum('sale', d => d === t)))}
+      ${card('#/report/sales-month', '📅', 'مبيعات هذا الشهر', money(sum('sale', d => d.startsWith(m))))}
+      ${card('#/report/purchases-month', '🛒', 'مشتريات هذا الشهر', money(sum('purchase', d => d.startsWith(m))))}
+      ${card('#/cash', '🏦', 'رصيد الصندوق', cashBal(entriesBalance(cashEntries())))}
+      ${card('#/report/receivables', '🔴', 'ديون لنا على العملاء', money(recv), 'owes')}
+      ${card('#/report/payables', '🟠', 'ديون علينا للموردين', money(payable))}
+    </div>`;
+}
+
 function reportPage(key) {
   if (!REPORTS[key]) key = 'sales-today';
   const t = today(), m = t.slice(0, 7);
@@ -773,7 +793,7 @@ function reportPage(key) {
 
   app.innerHTML = `
     <div class="page-head"><h2>${REPORTS[key]}</h2>
-      <div class="btn-row"><button class="btn" type="button" onclick="print()">🖨️ طباعة</button></div></div>
+      <div class="btn-row"><a class="btn" href="#/reports">→ رجوع للتقارير</a><button class="btn" type="button" onclick="print()">🖨️ طباعة</button></div></div>
     <div class="card">
       <div class="print-only"><div class="doc-head"><h2>${esc(db.settings.shopName)}</h2><h2>${REPORTS[key]}</h2></div></div>
       <div class="report-total"><span>${REPORTS[key]}</span><b>${money(total)} <small>${c}</small></b><span class="hint">${sub}</span></div>
@@ -787,7 +807,7 @@ function cashPage() {
   const st = cashPage.state || (cashPage.state = { from: '', to: '' });
   app.innerHTML = `
     <div class="page-head"><h2>رصيد الصندوق</h2>
-      <div class="btn-row"><button class="btn primary" type="button" onclick="print()">🖨️ طباعة</button></div></div>
+      <div class="btn-row"><a class="btn" href="#/reports">→ رجوع للتقارير</a><button class="btn primary" type="button" onclick="print()">🖨️ طباعة</button></div></div>
     <div class="card filters">
       <label>من تاريخ<input id="cf" type="date" value="${st.from}"></label>
       <label>إلى تاريخ<input id="ct" type="date" value="${st.to}"></label>
@@ -924,16 +944,17 @@ function notFound() {
 const routes = {
   home, new: newInvoice, edit: editInvoice, invoice: viewInvoice, invoices: invoicesList,
   payments: paymentsPage, parties: partiesPage, items: itemsPage, statement: statementPage,
-  cash: cashPage, settings: settingsPage, report: reportPage
+  cash: cashPage, settings: settingsPage, report: reportPage, reports: reportsPage
 };
 
 function render() {
-  const [name = 'home', arg = ''] = location.hash.replace(/^#\/?/, '').split('/');
+  let [name = 'home', arg = ''] = location.hash.replace(/^#\/?/, '').split('/');
   const fn = routes[name] || home;
   const shop = db.settings.shopName || 'مؤسسة طريق القمة';
   $('#shopTitle').textContent = shop;
   document.title = `${shop} — محاسبة`;
   let navArg = decodeURIComponent(arg);
+  if (name === 'report' || name === 'cash') { name = 'reports'; navArg = ''; }
   if (name === 'statement' && getParty(navArg)) navArg = statementPage.state?.all ? 'all' : getParty(navArg).type;
   if (name === 'payments' && !PAY[navArg]) navArg = 'receipt';
   if (name === 'parties' && !PTYPE[navArg]) navArg = 'customer';
