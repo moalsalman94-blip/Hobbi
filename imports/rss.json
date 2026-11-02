@@ -1,0 +1,994 @@
+{
+ "title": "كشف حساب الجمعية العلمية الملكية",
+ "parties": [
+  {
+   "id": "rss-party",
+   "type": "customer",
+   "name": "الجمعية العلمية الملكية",
+   "phone": "",
+   "opening": 12487.803,
+   "at": 1785999999000
+  }
+ ],
+ "invoices": [
+  {
+   "id": "rss-inv-000",
+   "kind": "sale",
+   "no": "2444",
+   "date": "2026-08-12",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2444",
+     "qty": 1,
+     "price": 25
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000000000
+  },
+  {
+   "id": "rss-inv-001",
+   "kind": "sale",
+   "no": "2543",
+   "date": "2026-08-12",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2543",
+     "qty": 1,
+     "price": 460
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000001000
+  },
+  {
+   "id": "rss-inv-002",
+   "kind": "sale",
+   "no": "2485",
+   "date": "2026-08-12",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2485",
+     "qty": 1,
+     "price": 50
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000002000
+  },
+  {
+   "id": "rss-inv-003",
+   "kind": "sale",
+   "no": "2483",
+   "date": "2026-08-12",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2483",
+     "qty": 1,
+     "price": 80
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000003000
+  },
+  {
+   "id": "rss-inv-004",
+   "kind": "sale",
+   "no": "2286",
+   "date": "2026-08-12",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2286",
+     "qty": 1,
+     "price": 20
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000004000
+  },
+  {
+   "id": "rss-inv-005",
+   "kind": "sale",
+   "no": "2338",
+   "date": "2026-08-12",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2338",
+     "qty": 1,
+     "price": 40
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000005000
+  },
+  {
+   "id": "rss-inv-006",
+   "kind": "sale",
+   "no": "2346",
+   "date": "2026-08-12",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2346",
+     "qty": 1,
+     "price": 60
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000006000
+  },
+  {
+   "id": "rss-inv-007",
+   "kind": "sale",
+   "no": "2337",
+   "date": "2026-08-12",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2337",
+     "qty": 1,
+     "price": 60
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000007000
+  },
+  {
+   "id": "rss-inv-008",
+   "kind": "sale",
+   "no": "2293",
+   "date": "2026-08-12",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2293",
+     "qty": 1,
+     "price": 100
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000008000
+  },
+  {
+   "id": "rss-inv-009",
+   "kind": "sale",
+   "no": "2289",
+   "date": "2026-08-12",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2289",
+     "qty": 1,
+     "price": 45
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000009000
+  },
+  {
+   "id": "rss-inv-010",
+   "kind": "sale",
+   "no": "2339 حب",
+   "date": "2026-08-12",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2339 حب",
+     "qty": 1,
+     "price": 20
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000010000
+  },
+  {
+   "id": "rss-inv-011",
+   "kind": "sale",
+   "no": "2288 Ldn fao",
+   "date": "2026-08-12",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2288 Ldn fao",
+     "qty": 1,
+     "price": 200
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000011000
+  },
+  {
+   "id": "rss-inv-012",
+   "kind": "sale",
+   "no": "2136",
+   "date": "2026-08-12",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2136",
+     "qty": 1,
+     "price": 120
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000012000
+  },
+  {
+   "id": "rss-inv-013",
+   "kind": "sale",
+   "no": "2134",
+   "date": "2026-08-12",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2134",
+     "qty": 1,
+     "price": 980
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000013000
+  },
+  {
+   "id": "rss-inv-014",
+   "kind": "sale",
+   "no": "2285",
+   "date": "2026-08-12",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2285",
+     "qty": 1,
+     "price": 300
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000014000
+  },
+  {
+   "id": "rss-inv-015",
+   "kind": "sale",
+   "no": "2616",
+   "date": "2026-08-13",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2616",
+     "qty": 1,
+     "price": 75
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000015000
+  },
+  {
+   "id": "rss-inv-017",
+   "kind": "sale",
+   "no": "2702",
+   "date": "2026-08-20",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2702",
+     "qty": 1,
+     "price": 1080
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000017000
+  },
+  {
+   "id": "rss-inv-018",
+   "kind": "sale",
+   "no": "2703",
+   "date": "2026-08-20",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2703",
+     "qty": 1,
+     "price": 280
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000018000
+  },
+  {
+   "id": "rss-inv-020",
+   "kind": "sale",
+   "no": "2824",
+   "date": "2026-09-13",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2824",
+     "qty": 1,
+     "price": 120.0
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000020000
+  },
+  {
+   "id": "rss-inv-021",
+   "kind": "sale",
+   "no": "2818",
+   "date": "2026-09-13",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2818",
+     "qty": 1,
+     "price": 160.0
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000021000
+  },
+  {
+   "id": "rss-inv-022",
+   "kind": "sale",
+   "no": "2816",
+   "date": "2026-09-13",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2816",
+     "qty": 1,
+     "price": 164.999
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000022000
+  },
+  {
+   "id": "rss-inv-023",
+   "kind": "sale",
+   "no": "2801",
+   "date": "2026-09-13",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2801",
+     "qty": 1,
+     "price": 480.0
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000023000
+  },
+  {
+   "id": "rss-inv-024",
+   "kind": "sale",
+   "no": "2774",
+   "date": "2026-09-13",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2774",
+     "qty": 1,
+     "price": 80.0
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000024000
+  },
+  {
+   "id": "rss-inv-025",
+   "kind": "sale",
+   "no": "2800",
+   "date": "2026-09-13",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2800",
+     "qty": 1,
+     "price": 25.0
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000025000
+  },
+  {
+   "id": "rss-inv-026",
+   "kind": "sale",
+   "no": "2757",
+   "date": "2026-09-13",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2757",
+     "qty": 1,
+     "price": 100.0
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000026000
+  },
+  {
+   "id": "rss-inv-027",
+   "kind": "sale",
+   "no": "2799",
+   "date": "2026-09-13",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2799",
+     "qty": 1,
+     "price": 30.0
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000027000
+  },
+  {
+   "id": "rss-inv-028",
+   "kind": "sale",
+   "no": "2615",
+   "date": "2026-09-13",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2615",
+     "qty": 1,
+     "price": 150.0
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000028000
+  },
+  {
+   "id": "rss-inv-029",
+   "kind": "sale",
+   "no": "2814",
+   "date": "2026-09-13",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2814",
+     "qty": 1,
+     "price": 80.0
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000029000
+  },
+  {
+   "id": "rss-inv-030",
+   "kind": "sale",
+   "no": "2765",
+   "date": "2026-09-13",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 2765",
+     "qty": 1,
+     "price": 80.0
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786000030000
+  },
+  {
+   "id": "rss-inv-031",
+   "kind": "sale",
+   "no": "EIN00541",
+   "date": "2026-10-05",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 3146",
+     "qty": 1,
+     "price": 159.999
+    }
+   ],
+   "discount": 0,
+   "note": "امر شراء رقم 3146",
+   "at": 1786000031000
+  },
+  {
+   "id": "rss-inv-032",
+   "kind": "sale",
+   "no": "EIN00540",
+   "date": "2026-10-05",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 3146",
+     "qty": 1,
+     "price": 80.0
+    }
+   ],
+   "discount": 0,
+   "note": "امر شراء رقم 3146",
+   "at": 1786000032000
+  },
+  {
+   "id": "rss-inv-033",
+   "kind": "sale",
+   "no": "EIN00539",
+   "date": "2026-10-05",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 3146",
+     "qty": 1,
+     "price": 60.0
+    }
+   ],
+   "discount": 0,
+   "note": "امر شراء رقم 3146",
+   "at": 1786000033000
+  },
+  {
+   "id": "rss-inv-034",
+   "kind": "sale",
+   "no": "EIN00538",
+   "date": "2026-10-05",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 3146",
+     "qty": 1,
+     "price": 75.0
+    }
+   ],
+   "discount": 0,
+   "note": "امر شراء رقم 3146",
+   "at": 1786000034000
+  },
+  {
+   "id": "rss-inv-035",
+   "kind": "sale",
+   "no": "EIN00537",
+   "date": "2026-10-05",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 3146",
+     "qty": 1,
+     "price": 360.0
+    }
+   ],
+   "discount": 0,
+   "note": "امر شراء رقم 3146",
+   "at": 1786000035000
+  },
+  {
+   "id": "rss-inv-036",
+   "kind": "sale",
+   "no": "EIN00536",
+   "date": "2026-10-05",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 3146",
+     "qty": 1,
+     "price": 124.194
+    }
+   ],
+   "discount": 0,
+   "note": "امر شراء رقم 3146",
+   "at": 1786000036000
+  },
+  {
+   "id": "rss-inv-037",
+   "kind": "sale",
+   "no": "EIN00535",
+   "date": "2026-10-05",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 3146",
+     "qty": 1,
+     "price": 79.998
+    }
+   ],
+   "discount": 0,
+   "note": "امر شراء رقم 3146",
+   "at": 1786000037000
+  },
+  {
+   "id": "rss-inv-038",
+   "kind": "sale",
+   "no": "EIN00534",
+   "date": "2026-10-05",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 3146",
+     "qty": 1,
+     "price": 120.0
+    }
+   ],
+   "discount": 0,
+   "note": "امر شراء رقم 3146",
+   "at": 1786000038000
+  },
+  {
+   "id": "rss-inv-039",
+   "kind": "sale",
+   "no": "EIN00533",
+   "date": "2026-10-05",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 3146",
+     "qty": 1,
+     "price": 103.495
+    }
+   ],
+   "discount": 0,
+   "note": "امر شراء رقم 3146",
+   "at": 1786000039000
+  },
+  {
+   "id": "rss-inv-040",
+   "kind": "sale",
+   "no": "EIN00532",
+   "date": "2026-10-05",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 3145",
+     "qty": 1,
+     "price": 360.0
+    }
+   ],
+   "discount": 0,
+   "note": "امر شراء رقم 3145",
+   "at": 1786000040000
+  },
+  {
+   "id": "rss-inv-041",
+   "kind": "sale",
+   "no": "EIN00531",
+   "date": "2026-10-05",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 3136",
+     "qty": 1,
+     "price": 90.0
+    }
+   ],
+   "discount": 0,
+   "note": "امر شراء رقم 3136",
+   "at": 1786000041000
+  },
+  {
+   "id": "rss-inv-042",
+   "kind": "sale",
+   "no": "EIN00530",
+   "date": "2026-10-05",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 3135",
+     "qty": 1,
+     "price": 50.0
+    }
+   ],
+   "discount": 0,
+   "note": "امر شراء رقم 3135",
+   "at": 1786000042000
+  },
+  {
+   "id": "rss-inv-043",
+   "kind": "sale",
+   "no": "EIN00529",
+   "date": "2026-10-05",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 3174",
+     "qty": 1,
+     "price": 100.0
+    }
+   ],
+   "discount": 0,
+   "note": "امر شراء رقم 3174",
+   "at": 1786000043000
+  },
+  {
+   "id": "rss-inv-044",
+   "kind": "sale",
+   "no": "EIN00528",
+   "date": "2026-10-05",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 308",
+     "qty": 1,
+     "price": 460.0
+    }
+   ],
+   "discount": 0,
+   "note": "امر شراء رقم 308",
+   "at": 1786000044000
+  },
+  {
+   "id": "rss-inv-045",
+   "kind": "sale",
+   "no": "EIN00527",
+   "date": "2026-10-05",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 306",
+     "qty": 1,
+     "price": 460.0
+    }
+   ],
+   "discount": 0,
+   "note": "امر شراء رقم 306",
+   "at": 1786000045000
+  },
+  {
+   "id": "rss-inv-046",
+   "kind": "sale",
+   "no": "EIN00526",
+   "date": "2026-10-05",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 3227",
+     "qty": 1,
+     "price": 80.0
+    }
+   ],
+   "discount": 0,
+   "note": "امر شراء رقم 3227",
+   "at": 1786000046000
+  },
+  {
+   "id": "rss-inv-047",
+   "kind": "sale",
+   "no": "EIN00525",
+   "date": "2026-10-05",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 3215",
+     "qty": 1,
+     "price": 640.001
+    }
+   ],
+   "discount": 0,
+   "note": "امر شراء رقم 3215",
+   "at": 1786000047000
+  },
+  {
+   "id": "rss-inv-048",
+   "kind": "sale",
+   "no": "EIN00524",
+   "date": "2026-10-05",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 3220",
+     "qty": 1,
+     "price": 360.0
+    }
+   ],
+   "discount": 0,
+   "note": "امر شراء رقم 3220",
+   "at": 1786000048000
+  },
+  {
+   "id": "rss-inv-049",
+   "kind": "sale",
+   "no": "EIN00523",
+   "date": "2026-10-05",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 3219",
+     "qty": 1,
+     "price": 380.0
+    }
+   ],
+   "discount": 0,
+   "note": "امر شراء رقم 3219",
+   "at": 1786000049000
+  },
+  {
+   "id": "rss-inv-051",
+   "kind": "sale",
+   "no": "EIN00546",
+   "date": "2026-10-12",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 3308",
+     "qty": 1,
+     "price": 240.0
+    }
+   ],
+   "discount": 0,
+   "note": "امر شراء رقم 3308",
+   "at": 1786000051000
+  },
+  {
+   "id": "rss-inv-052",
+   "kind": "sale",
+   "no": "EIN00545",
+   "date": "2026-10-12",
+   "pay": "credit",
+   "partyId": "rss-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "امر شراء رقم 3309",
+     "qty": 1,
+     "price": 1080.0
+    }
+   ],
+   "discount": 0,
+   "note": "امر شراء رقم 3309",
+   "at": 1786000052000
+  }
+ ],
+ "payments": [
+  {
+   "id": "rss-pay-016",
+   "kind": "receipt",
+   "date": "2026-08-16",
+   "partyId": "rss-party",
+   "amount": 5000,
+   "note": "شيك رقم 42782",
+   "at": 1786000016000
+  },
+  {
+   "id": "rss-pay-019",
+   "kind": "receipt",
+   "date": "2026-08-30",
+   "partyId": "rss-party",
+   "amount": 960,
+   "note": "دفعة بالحساب",
+   "at": 1786000019000
+  },
+  {
+   "id": "rss-pay-050",
+   "kind": "receipt",
+   "date": "2026-10-06",
+   "partyId": "rss-party",
+   "amount": 5792.8,
+   "note": "شيك رقم 43045",
+   "at": 1786000050000
+  }
+ ]
+}

@@ -11,8 +11,8 @@ const DB_KEY = 'shop-accounting-v1';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const round = n => Math.round((+n || 0) * 100) / 100;
-const money = n => round(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const round = n => Math.round((+n || 0) * 1000) / 1000;
+const money = n => round(n).toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 const num = v => { const n = parseFloat(String(v ?? '').replace(',', '.')); return isFinite(n) ? n : 0; };
 const byName = (a, b) => a.name.localeCompare(b.name, 'ar');
@@ -778,6 +778,65 @@ function reportPage(key) {
   bindRowLinks();
 }
 
+/* ----- استيراد ودمج حركات (بدون حذف أي إشي) ----- */
+function mergeData(d) {
+  const idMap = {}, added = { parties: 0, invoices: 0, payments: 0 };
+  for (const p of d.parties || []) {
+    const ex = db.parties.find(x => x.id === p.id) || db.parties.find(x => x.type === p.type && x.name.trim() === String(p.name).trim());
+    if (ex) {
+      idMap[p.id] = ex.id;
+      if (num(p.opening) && round(num(ex.opening)) !== round(num(p.opening)) &&
+          confirm(`الرصيد الافتتاحي لـ ${ex.name} حالياً ${money(ex.opening)}.\nبدك تخليه ${money(p.opening)} متل الكشف؟`)) ex.opening = round(num(p.opening));
+    } else {
+      const np = { phone: '', ...p, id: p.id || uid(), at: p.at || Date.now() };
+      db.parties.push(np); idMap[p.id] = np.id; added.parties++;
+    }
+  }
+  for (const inv of d.invoices || []) {
+    if (db.invoices.some(x => x.id === inv.id)) continue;
+    db.invoices.push({ ...inv, partyId: idMap[inv.partyId] || inv.partyId }); added.invoices++;
+  }
+  for (const v of d.payments || []) {
+    if (db.payments.some(x => x.id === v.id)) continue;
+    const no = v.no || nextNo(db.payments.filter(x => x.kind === v.kind));
+    db.payments.push({ ...v, no, partyId: idMap[v.partyId] || v.partyId }); added.payments++;
+  }
+  save();
+  return added;
+}
+
+async function importPage(name) {
+  app.innerHTML = `<div class="page-head"><h2>استيراد حركات</h2></div><div class="card" id="impBody"><p class="hint">جاري التحميل...</p></div>`;
+  let d;
+  try {
+    const r = await fetch(`imports/${encodeURIComponent(name)}.json?t=${Date.now()}`);
+    if (!r.ok) throw new Error(r.status);
+    d = await r.json();
+  } catch (e) { $('#impBody').innerHTML = '<p class="owes">ما لقيت ملف الاستيراد.</p>'; return; }
+  const p = (d.parties || [])[0];
+  const invs = d.invoices || [], pays = d.payments || [];
+  const tInv = invs.reduce((s, i) => s + invTotal(i), 0), tPay = pays.reduce((s, v) => s + num(v.amount), 0);
+  const ob = p ? num(p.opening) : 0;
+  const already = invs.filter(i => db.invoices.some(x => x.id === i.id)).length + pays.filter(v => db.payments.some(x => x.id === v.id)).length;
+  $('#impBody').innerHTML = `
+    <h3 style="margin-top:0">${esc(d.title || name)}</h3>
+    <div class="doc-sum" style="margin-inline-start:0">
+      ${p ? `<div><span>الحساب</span><b>${esc(p.name)}</b></div><div><span>رصيد افتتاحي</span><b>${money(ob)}</b></div>` : ''}
+      <div><span>فواتير ذمم (${invs.length})</span><b>${money(tInv)}</b></div>
+      <div><span>دفعات وسندات قبض (${pays.length})</span><b>${money(tPay)}</b></div>
+      <div><span>الرصيد بعد الإضافة</span><b>${money(ob + tInv - tPay)}</b></div>
+    </div>
+    ${already ? `<p class="hint">${already} حركة منهم موجودة أصلاً، ما رح تتكرر.</p>` : ''}
+    <p class="hint">رح تنضاف الحركات لبياناتك بدون ما ينمسح أي إشي، وبتتزامن على كل الأجهزة.</p>
+    <div class="actions"><button class="btn primary" id="doImp">إضافة الحركات</button><a class="btn" href="#/home">إلغاء</a></div>`;
+  $('#doImp').onclick = () => {
+    const a = mergeData(d);
+    toast(`تمت الإضافة: ${a.invoices} فاتورة و ${a.payments} سند`);
+    const pid = p && (db.parties.find(x => x.id === p.id) || db.parties.find(x => x.type === p.type && x.name.trim() === p.name.trim()));
+    location.hash = pid ? '#/statement/' + pid.id : '#/home';
+  };
+}
+
 /* ----- الصندوق ----- */
 function cashPage() {
   const st = cashPage.state || (cashPage.state = { from: '', to: '' });
@@ -827,7 +886,8 @@ function settingsPage() {
       <p class="hint">${cloud.on ? 'البيانات محفوظة على السيرفر ومتزامنة بين الأجهزة. برضه خذ نسخة احتياطية كل فترة للأمان.' : 'البيانات محفوظة على هذا الجهاز وهذا المتصفح بس. خذ نسخة احتياطية بشكل دوري، وبتقدر ترجعها على أي جهاز ثاني.'}</p>
       <div class="btn-row">
         <button class="btn primary" type="button" id="exp">تنزيل نسخة احتياطية</button>
-        <label class="btn" style="flex-direction:row;color:var(--text)">استرجاع نسخة<input type="file" id="imp" accept="application/json,.json" hidden></label>
+        <label class="btn" style="flex-direction:row;color:var(--text)">استرجاع نسخة (استبدال الكل)<input type="file" id="imp" accept="application/json,.json" hidden></label>
+        <label class="btn" style="flex-direction:row;color:var(--text)">استيراد وإضافة (بدون حذف)<input type="file" id="impMerge" accept="application/json,.json" hidden></label>
       </div>
     </div>
     <div class="card" id="logCard">
@@ -862,6 +922,21 @@ function settingsPage() {
     a.download = `نسخة-احتياطية-${today()}.json`;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  };
+  $('#impMerge').onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const d = JSON.parse(r.result);
+        if (!d || (!Array.isArray(d.invoices) && !Array.isArray(d.payments))) throw new Error('bad');
+        const a = mergeData(d);
+        toast(`تمت الإضافة: ${a.parties} حساب، ${a.invoices} فاتورة، ${a.payments} سند`); render();
+      } catch (err) { alert('الملف مش صحيح'); }
+    };
+    r.readAsText(file);
+    e.target.value = '';
   };
   $('#imp').onchange = e => {
     const file = e.target.files[0];
@@ -1169,7 +1244,7 @@ function cloudLogout() {
 const routes = {
   home, new: newInvoice, edit: editInvoice, invoice: viewInvoice, invoices: invoicesList,
   payments: paymentsPage, parties: partiesPage, statement: statementPage,
-  cash: cashPage, settings: settingsPage, report: reportPage, reports: reportsPage
+  cash: cashPage, settings: settingsPage, report: reportPage, reports: reportsPage, import: importPage
 };
 
 function render(soft) {
