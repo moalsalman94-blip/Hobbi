@@ -1309,14 +1309,26 @@ async function shareView() {
 
     const w = sheet.offsetWidth, h = sheet.offsetHeight;
     const scale = Math.max(1.2, Math.min(2, Math.sqrt(16e6 / (w * h))));
-    // حدود الأسطر لتجنب قص سطر بين صفحتين
-    const top0 = sheet.getBoundingClientRect().top;
-    const Y = el => { const r = el.getBoundingClientRect(); return [(r.top - top0) * scale, (r.bottom - top0) * scale]; };
-    const breaks = [...sheet.querySelectorAll('tbody tr, tfoot tr, .doc-sum, .balance-box, .sum-boxes, .doc-meta, .report-total, .stats, p')]
-      .map(el => Y(el)[1]).sort((a, b) => a - b);
-    const tables = [...sheet.querySelectorAll('table')].map(t => { const th = t.querySelector('thead'); return th ? { head: Y(th), body: Y(t) } : null; }).filter(Boolean);
-
-    const canvas = await html2canvas(sheet, { scale, backgroundColor: '#ffffff', useCORS: true, logging: false, windowWidth: w, scrollX: 0, scrollY: -window.scrollY });
+    // حدود الأسطر بتنقاس من نفس النسخة اللي بتنرسم، لتجنب قص سطر بين صفحتين
+    let breaks = [], tables = [];
+    const measure = root => {
+      const top0 = root.getBoundingClientRect().top;
+      const Y = el => { const r = el.getBoundingClientRect(); return [(r.top - top0) * scale, (r.bottom - top0) * scale]; };
+      breaks = [...root.querySelectorAll('tbody tr, tfoot tr, .doc-sum, .balance-box, .sum-boxes, .doc-meta, .report-total, .stats, p')]
+        .map(el => Y(el)[1]).sort((a, b) => a - b);
+      tables = [...root.querySelectorAll('table')].map(t => { const th = t.querySelector('thead'); return th ? { head: Y(th), body: Y(t) } : null; }).filter(Boolean);
+    };
+    const canvas = await html2canvas(sheet, {
+      scale, backgroundColor: '#ffffff', useCORS: true, logging: false,
+      windowWidth: document.documentElement.clientWidth, windowHeight: window.innerHeight,
+      scrollX: 0, scrollY: -window.scrollY,
+      onclone: async doc => {
+        const root = doc.querySelector('.pdf-sheet');
+        if (doc.fonts && doc.fonts.ready) { try { await doc.fonts.ready; } catch (e) {} }
+        measure(root);
+      }
+    });
+    if (!breaks.length) measure(sheet);
     const W = canvas.width, PH = Math.floor(W * 297 / 210);
     const footH = Math.round(44 * scale), topM = Math.round(34 * scale);
 

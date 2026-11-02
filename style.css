@@ -670,3 +670,4 @@ input[type="date"]::-webkit-date-and-time-value { text-align: right; }
 .pdf-sheet .stat .go { display: none; }
 .pdf-sheet * { letter-spacing: 0 !important; }
 .pdf-sheet .doc-sum { margin: 14px 0 0 0; margin-right: auto; }
+.pdf-sheet > main { margin: 0 !important; padding: 0 !important; max-width: none !important; width: 100% !important; }
