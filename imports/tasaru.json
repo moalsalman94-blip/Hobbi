@@ -1,0 +1,661 @@
+{
+ "title": "كشف حساب التسارع للاحبار",
+ "parties": [
+  {
+   "id": "tasaru-party",
+   "type": "supplier",
+   "name": "التسارع للاحبار",
+   "phone": "",
+   "opening": 182,
+   "at": 1786499999000
+  }
+ ],
+ "invoices": [
+  {
+   "id": "tas-inv-000",
+   "kind": "purchase",
+   "no": "ت-1",
+   "date": "2026-08-08",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 144
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500000000
+  },
+  {
+   "id": "tas-inv-001",
+   "kind": "purchase",
+   "no": "ت-2",
+   "date": "2026-08-10",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 144
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500001000
+  },
+  {
+   "id": "tas-inv-002",
+   "kind": "purchase",
+   "no": "ت-3",
+   "date": "2026-08-16",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 40
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500002000
+  },
+  {
+   "id": "tas-inv-003",
+   "kind": "purchase",
+   "no": "ت-4",
+   "date": "2026-08-20",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 162
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500003000
+  },
+  {
+   "id": "tas-inv-005",
+   "kind": "purchase",
+   "no": "ت-5",
+   "date": "2026-08-20",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 80
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500005000
+  },
+  {
+   "id": "tas-inv-006",
+   "kind": "purchase",
+   "no": "ت-6",
+   "date": "2026-09-02",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 115
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500006000
+  },
+  {
+   "id": "tas-inv-007",
+   "kind": "purchase",
+   "no": "ت-7",
+   "date": "2026-09-02",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 216
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500007000
+  },
+  {
+   "id": "tas-inv-008",
+   "kind": "purchase",
+   "no": "ت-8",
+   "date": "2026-09-03",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 30
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500008000
+  },
+  {
+   "id": "tas-inv-009",
+   "kind": "purchase",
+   "no": "ت-9",
+   "date": "2026-09-03",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 15
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500009000
+  },
+  {
+   "id": "tas-inv-010",
+   "kind": "purchase",
+   "no": "ت-10",
+   "date": "2026-09-07",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 148
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500010000
+  },
+  {
+   "id": "tas-inv-011",
+   "kind": "purchase",
+   "no": "ت-11",
+   "date": "2026-09-09",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 42
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500011000
+  },
+  {
+   "id": "tas-inv-012",
+   "kind": "purchase",
+   "no": "ت-12",
+   "date": "2026-09-09",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 168
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500012000
+  },
+  {
+   "id": "tas-inv-013",
+   "kind": "purchase",
+   "no": "ت-13",
+   "date": "2026-09-12",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 162
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500013000
+  },
+  {
+   "id": "tas-inv-015",
+   "kind": "purchase",
+   "no": "ت-14",
+   "date": "2026-09-13",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 131
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500015000
+  },
+  {
+   "id": "tas-inv-016",
+   "kind": "purchase",
+   "no": "ت-15",
+   "date": "2026-09-16",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 216
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500016000
+  },
+  {
+   "id": "tas-inv-017",
+   "kind": "purchase",
+   "no": "ت-16",
+   "date": "2026-09-21",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 144
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500017000
+  },
+  {
+   "id": "tas-inv-018",
+   "kind": "purchase",
+   "no": "ت-17",
+   "date": "2026-09-20",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 120
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500018000
+  },
+  {
+   "id": "tas-inv-019",
+   "kind": "purchase",
+   "no": "ت-18",
+   "date": "2026-09-22",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 45
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500019000
+  },
+  {
+   "id": "tas-inv-020",
+   "kind": "purchase",
+   "no": "ت-19",
+   "date": "2026-09-24",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 126
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500020000
+  },
+  {
+   "id": "tas-inv-021",
+   "kind": "purchase",
+   "no": "ت-20",
+   "date": "2026-09-28",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 28
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500021000
+  },
+  {
+   "id": "tas-inv-022",
+   "kind": "purchase",
+   "no": "ت-21",
+   "date": "2026-09-30",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 144
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500022000
+  },
+  {
+   "id": "tas-inv-023",
+   "kind": "purchase",
+   "no": "ت-22",
+   "date": "2026-09-23",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 70
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500023000
+  },
+  {
+   "id": "tas-inv-024",
+   "kind": "purchase",
+   "no": "ت-23",
+   "date": "2026-09-14",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 54
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500024000
+  },
+  {
+   "id": "tas-inv-026",
+   "kind": "purchase",
+   "no": "ت-24",
+   "date": "2026-10-10",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 183
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500026000
+  },
+  {
+   "id": "tas-inv-027",
+   "kind": "purchase",
+   "no": "ت-25",
+   "date": "2026-10-14",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 72
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500027000
+  },
+  {
+   "id": "tas-inv-028",
+   "kind": "purchase",
+   "no": "ت-26",
+   "date": "2026-10-17",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 162
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500028000
+  },
+  {
+   "id": "tas-inv-029",
+   "kind": "purchase",
+   "no": "ت-27",
+   "date": "2026-10-17",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 30
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500029000
+  },
+  {
+   "id": "tas-inv-030",
+   "kind": "purchase",
+   "no": "ت-28",
+   "date": "2026-10-19",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 171
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500030000
+  },
+  {
+   "id": "tas-inv-031",
+   "kind": "purchase",
+   "no": "ت-29",
+   "date": "2026-10-05",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 20
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500031000
+  },
+  {
+   "id": "tas-inv-032",
+   "kind": "purchase",
+   "no": "ت-30",
+   "date": "2026-10-28",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 20
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500032000
+  },
+  {
+   "id": "tas-inv-034",
+   "kind": "purchase",
+   "no": "ت-31",
+   "date": "2026-11-01",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 28
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500034000
+  },
+  {
+   "id": "tas-inv-035",
+   "kind": "purchase",
+   "no": "ت-32",
+   "date": "2026-11-02",
+   "pay": "credit",
+   "partyId": "tasaru-party",
+   "lines": [
+    {
+     "itemId": null,
+     "name": "مشتريات",
+     "qty": 1,
+     "price": 48
+    }
+   ],
+   "discount": 0,
+   "note": "",
+   "at": 1786500035000
+  }
+ ],
+ "payments": [
+  {
+   "id": "tas-pay-004",
+   "kind": "payment",
+   "date": "2026-09-02",
+   "partyId": "tasaru-party",
+   "amount": 500,
+   "note": "",
+   "at": 1786500004000
+  },
+  {
+   "id": "tas-pay-014",
+   "kind": "payment",
+   "date": "2026-09-14",
+   "partyId": "tasaru-party",
+   "amount": 125,
+   "note": "",
+   "at": 1786500014000
+  },
+  {
+   "id": "tas-pay-025",
+   "kind": "payment",
+   "date": "2026-10-03",
+   "partyId": "tasaru-party",
+   "amount": 1500,
+   "note": "",
+   "at": 1786500025000
+  },
+  {
+   "id": "tas-pay-033",
+   "kind": "payment",
+   "date": "2026-10-29",
+   "partyId": "tasaru-party",
+   "amount": 900,
+   "note": "",
+   "at": 1786500033000
+  }
+ ]
+}

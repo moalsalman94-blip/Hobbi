@@ -779,10 +779,14 @@ function reportPage(key) {
 }
 
 /* ----- استيراد ودمج حركات (بدون حذف أي إشي) ----- */
+// توحيد الأسماء للمطابقة (أ/ا، ة/ه، ى/ي، المسافات)
+const normName = s => String(s || '').trim().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/\s+/g, ' ');
+const findParty = p => db.parties.find(x => x.id === p.id) || db.parties.find(x => x.type === p.type && normName(x.name) === normName(p.name));
+
 function mergeData(d) {
   const idMap = {}, added = { parties: 0, invoices: 0, payments: 0 };
   for (const p of d.parties || []) {
-    const ex = db.parties.find(x => x.id === p.id) || db.parties.find(x => x.type === p.type && x.name.trim() === String(p.name).trim());
+    const ex = findParty(p);
     if (ex) {
       idMap[p.id] = ex.id;
       if (num(p.opening) && round(num(ex.opening)) !== round(num(p.opening)) &&
@@ -814,6 +818,7 @@ async function importPage(name) {
     d = await r.json();
   } catch (e) { $('#impBody').innerHTML = '<p class="owes">ما لقيت ملف الاستيراد.</p>'; return; }
   const p = (d.parties || [])[0];
+  const sup = p && p.type === 'supplier';
   const invs = d.invoices || [], pays = d.payments || [];
   const tInv = invs.reduce((s, i) => s + invTotal(i), 0), tPay = pays.reduce((s, v) => s + num(v.amount), 0);
   const ob = p ? num(p.opening) : 0;
@@ -822,9 +827,9 @@ async function importPage(name) {
     <h3 style="margin-top:0">${esc(d.title || name)}</h3>
     <div class="doc-sum" style="margin-inline-start:0">
       ${p ? `<div><span>الحساب</span><b>${esc(p.name)}</b></div><div><span>رصيد افتتاحي</span><b>${money(ob)}</b></div>` : ''}
-      <div><span>فواتير ذمم (${invs.length})</span><b>${money(tInv)}</b></div>
-      <div><span>دفعات وسندات قبض (${pays.length})</span><b>${money(tPay)}</b></div>
-      <div><span>الرصيد بعد الإضافة</span><b>${money(ob + tInv - tPay)}</b></div>
+      <div><span>${sup ? 'فواتير شراء ذمم' : 'فواتير بيع ذمم'} (${invs.length})</span><b>${money(tInv)}</b></div>
+      <div><span>${sup ? 'سندات صرف' : 'سندات قبض ودفعات'} (${pays.length})</span><b>${money(tPay)}</b></div>
+      <div><span>${sup ? 'الرصيد المستحق للمورد' : 'الرصيد المستحق على العميل'}</span><b>${money(ob + tInv - tPay)}</b></div>
     </div>
     ${already ? `<p class="hint">${already} حركة منهم موجودة أصلاً، ما رح تتكرر.</p>` : ''}
     <p class="hint">رح تنضاف الحركات لبياناتك بدون ما ينمسح أي إشي، وبتتزامن على كل الأجهزة.</p>
@@ -832,7 +837,7 @@ async function importPage(name) {
   $('#doImp').onclick = () => {
     const a = mergeData(d);
     toast(`تمت الإضافة: ${a.invoices} فاتورة و ${a.payments} سند`);
-    const pid = p && (db.parties.find(x => x.id === p.id) || db.parties.find(x => x.type === p.type && x.name.trim() === p.name.trim()));
+    const pid = p && findParty(p);
     location.hash = pid ? '#/statement/' + pid.id : '#/home';
   };
 }
