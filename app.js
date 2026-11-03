@@ -25,6 +25,7 @@ function today() {
 /* ---------- أيقونات ---------- */
 const ICONS = {
   menu: '<path d="M4 7h16M4 12h16M4 17h10"/>',
+  tax: '<circle cx="12" cy="12" r="9"/><path d="m8.5 15.5 7-7"/><circle cx="9" cy="9" r="1.3"/><circle cx="15" cy="15" r="1.3"/>',
   share: '<circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="m8.3 10.8 7.4-4.4M8.3 13.2l7.4 4.4"/>',
   home: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5.5h4V20"/>',
   sale: '<path d="M6 2.8h12v18.4l-2.4-1.6-2.4 1.6-1.2-.8-1.2.8-2.4-1.6L6 21.2z"/><path d="M9 7.5h6M9 11h6M9 14.5h3.5"/>',
@@ -59,7 +60,7 @@ function emblem(cls = '') {
 /* ---------- قاعدة البيانات ---------- */
 function blankDb() {
   return {
-    settings: { shopName: 'مؤسسة طريق القمة', currency: 'د.أ', openingCash: 0 },
+    settings: { shopName: 'مؤسسة طريق القمة', currency: 'د.أ', openingCash: 0, taxRate: 16, taxIncl: false },
     parties: [],   // {id, type:'customer'|'supplier', name, phone, opening, at}
     items: [],     // {id, name, unit, buyPrice, sellPrice, openingQty, at}
     invoices: [],  // {id, kind:'sale'|'purchase', no, date, partyId, pay:'cash'|'credit', lines:[{itemId,name,qty,price}], discount, note, at}
@@ -99,7 +100,7 @@ function save() {
 /* ---------- مسمّيات ---------- */
 const KIND = { sale: 'بيع', purchase: 'شراء' };
 const PAYMETHOD = { cash: 'نقدي', credit: 'ذمم' };
-const PAY = { receipt: 'سند قبض', payment: 'سند صرف' };
+const PAY = { receipt: 'سند قبض', payment: 'سند صرف', taxpay: 'دفعة ضريبة' };
 const PTYPE = { customer: 'عميل', supplier: 'مورد' };
 const PTYPES = { customer: 'العملاء', supplier: 'الموردين' };
 const partyTypeFor = kind => (kind === 'sale' ? 'customer' : 'supplier');
@@ -112,7 +113,16 @@ const cur = () => esc(db.settings.currency);
 const initial = n => (String(n || '').replace(/^(ال|مؤسسة|شركة)\s*/, '').trim()[0] || '؟');
 
 const subTotal = inv => round(inv.lines.reduce((s, l) => s + num(l.qty) * num(l.price), 0));
-const invTotal = inv => round(subTotal(inv) - num(inv.discount));
+const invBase = inv => round(subTotal(inv) - num(inv.discount));
+// الضريبة: الأسعار قبل الضريبة (بتنضاف) أو شاملة الضريبة (بتنحسب من جوّا)
+function invCalc(inv) {
+  const base = invBase(inv), r = num(inv.taxRate) / 100;
+  if (!r) return { net: base, tax: 0, total: base };
+  if (inv.taxIncl) { const net = round(base / (1 + r)); return { net, tax: round(base - net), total: base }; }
+  const tax = round(base * r);
+  return { net: base, tax, total: round(base + tax) };
+}
+const invTotal = inv => invCalc(inv).total;
 const nextNo = list => list.reduce((m, x) => Math.max(m, +x.no || 0), 0) + 1;
 const byDate = (a, b) => (a.date || '').localeCompare(b.date || '') || (a.at || 0) - (b.at || 0);
 
@@ -342,7 +352,8 @@ function newInvoice(kind) {
   if (!KIND[kind]) kind = 'sale';
   invoiceForm({
     kind, no: nextNo(db.invoices.filter(i => i.kind === kind)), date: today(), partyId: '',
-    pay: 'cash', lines: [{ itemId: null, name: '', qty: 1, price: '' }], discount: '', note: ''
+    pay: 'cash', lines: [{ itemId: null, name: '', qty: 1, price: '' }], discount: '', note: '',
+    taxRate: db.settings.taxRate ?? 16, taxIncl: !!db.settings.taxIncl
   }, true);
 }
 
@@ -386,8 +397,11 @@ function invoiceForm(inv, isNew) {
 
       <div class="totals">
         <div class="sum">المجموع<b id="tSub"></b></div>
+        <div class="sum">ضريبة المبيعات<b id="tTax"></b></div>
         <label>الخصم<input name="discount" type="number" step="any" min="0" value="${esc(inv.discount)}"></label>
-        <div class="sum">الصافي<b id="tNet"></b></div>
+        <label>نسبة الضريبة %<input name="taxRate" type="number" step="any" min="0" value="${esc(inv.taxRate ?? '')}" placeholder="0 = بدون ضريبة"></label>
+        <label class="chk"><input type="checkbox" name="taxIncl" ${inv.taxIncl ? 'checked' : ''}> الأسعار شاملة الضريبة</label>
+        <div class="sum grand">الإجمالي<b id="tNet"></b></div>
       </div>
       <label>ملاحظات<input name="note" value="${esc(inv.note)}"></label>
 
@@ -422,8 +436,12 @@ function invoiceForm(inv, isNew) {
   }
   function recalc() {
     inv.discount = form.discount.value;
+    inv.taxRate = form.taxRate.value;
+    inv.taxIncl = form.taxIncl.checked;
+    const c = invCalc(inv);
     $('#tSub').textContent = money(subTotal(inv));
-    $('#tNet').textContent = money(invTotal(inv));
+    $('#tTax').textContent = money(c.tax);
+    $('#tNet').textContent = money(c.total);
   }
 
   tbody.addEventListener('input', e => {
@@ -455,6 +473,8 @@ function invoiceForm(inv, isNew) {
     $(`[data-i="${inv.lines.length - 1}"][data-f="name"]`, tbody).focus();
   };
   form.discount.oninput = recalc;
+  form.taxRate.oninput = recalc;
+  form.taxIncl.onchange = recalc;
   $$('[name=pay]', form).forEach(r => r.onchange = () => updatePay());
   $('#addParty').onclick = () => partyDialog(ptype, null, p => updatePay(p.id));
 
@@ -491,7 +511,8 @@ function invoiceForm(inv, isNew) {
 
     let rec = db.invoices.find(x => x.id === inv.id);
     if (!rec) { rec = { id: uid(), at: Date.now(), kind }; db.invoices.push(rec); }
-    Object.assign(rec, { no, date: form.date.value, pay, partyId, lines, discount, note: form.note.value.trim() });
+    Object.assign(rec, { no, date: form.date.value, pay, partyId, lines, discount,
+      taxRate: round(num(form.taxRate.value)), taxIncl: form.taxIncl.checked, note: form.note.value.trim() });
     save();
     toast('تم حفظ الفاتورة');
     location.hash = '#/invoice/' + rec.id;
@@ -506,7 +527,7 @@ function invoiceForm(inv, isNew) {
 function viewInvoice(id) {
   const inv = db.invoices.find(i => i.id === id);
   if (!inv) return notFound();
-  const t = invTotal(inv), party = getParty(inv.partyId), cr = isCredit(inv);
+  const tc = invCalc(inv), t = tc.total, party = getParty(inv.partyId), cr = isCredit(inv);
   app.innerHTML = `
     <div class="page-head"><h2>فاتورة ${KIND[inv.kind]} رقم ${esc(inv.no)}</h2>
       <div class="btn-row">
@@ -530,7 +551,9 @@ function viewInvoice(id) {
       <div class="doc-sum">
         <div><span>المجموع</span><b>${money(subTotal(inv))}</b></div>
         ${num(inv.discount) ? `<div><span>الخصم</span><b>${money(inv.discount)}</b></div>` : ''}
-        <div><span>الصافي</span><b>${money(t)} ${cur()}</b></div>
+        ${tc.tax ? `<div><span>المبلغ قبل الضريبة</span><b>${money(tc.net)}</b></div>
+        <div><span>ضريبة المبيعات ${esc(num(inv.taxRate))}%${inv.taxIncl ? ' (شاملة)' : ''}</span><b>${money(tc.tax)}</b></div>` : ''}
+        <div><span>الإجمالي</span><b>${money(t)} ${cur()}</b></div>
       </div>
       ${inv.note ? `<p><b>ملاحظات:</b> ${esc(inv.note)}</p>` : ''}
     </div>`;
@@ -757,6 +780,7 @@ function reportsPage() {
       ${card('#/report/purchases-month', '', 'مشتريات هذا الشهر', money(sum('purchase', d => d.startsWith(m))))}
       ${card('#/report/receivables', '', 'ديون لنا على العملاء', money(recv), 'owes')}
       ${card('#/report/payables', '', 'ديون علينا للموردين', money(payable))}
+      ${card('#/tax', '', 'ضريبة المبيعات المستحقة', money(entriesBalance(taxEntries())))}
     </div>`;
 }
 
@@ -865,6 +889,113 @@ async function importPage(name) {
   };
 }
 
+/* ----- كشف ضريبة المبيعات ----- */
+// مدين = ضريبة على مبيعاتنا (علينا للضريبة)، دائن = ضريبة على مشترياتنا + دفعات للضريبة
+function taxEntries() {
+  const e = [];
+  for (const inv of db.invoices) {
+    const c = invCalc(inv);
+    if (!c.tax) continue;
+    const sale = inv.kind === 'sale';
+    e.push({ date: inv.date, at: inv.at, link: '#/invoice/' + inv.id, base: c.net, rate: num(inv.taxRate),
+      desc: `فاتورة ${KIND[inv.kind]} رقم ${inv.no}${getParty(inv.partyId) ? ' — ' + partyName(inv.partyId) : ''}`,
+      debit: sale ? c.tax : 0, credit: sale ? 0 : c.tax, kind: inv.kind });
+  }
+  for (const v of db.payments) {
+    if (v.kind !== 'taxpay') continue;
+    e.push({ date: v.date, at: v.at, desc: `دفعة ضريبة رقم ${v.no}${v.note ? ' — ' + v.note : ''}`, debit: 0, credit: num(v.amount), kind: 'taxpay', id: v.id });
+  }
+  return e.sort(byDate);
+}
+
+function taxPayDialog(after) {
+  openDialog('دفعة لضريبة المبيعات', `
+    <p class="hint" style="margin:0">مبلغ دفعته لدائرة ضريبة الدخل والمبيعات</p>
+    <div class="grid g2">
+      <label>الرقم<input name="no" type="number" min="1" value="${nextNo(db.payments.filter(x => x.kind === 'taxpay'))}"></label>
+      <label>التاريخ<input name="date" type="date" value="${today()}"></label>
+    </div>
+    <label>المبلغ (${cur()})<input name="amount" type="number" step="any" min="0" required></label>
+    <label>ملاحظة<input name="note" placeholder="مثلاً: إقرار شهر 10"></label>`,
+    d => {
+      const amount = round(num(d.amount));
+      if (!(amount > 0)) { alert('اكتب المبلغ'); return false; }
+      if (!d.date) { alert('اختر التاريخ'); return false; }
+      db.payments.push({ id: uid(), at: Date.now(), kind: 'taxpay', no: parseInt(d.no, 10) || nextNo(db.payments.filter(x => x.kind === 'taxpay')),
+        date: d.date, partyId: '', amount, note: d.note.trim() });
+      save(); toast('تم الحفظ'); after && after();
+    });
+}
+
+function taxPage() {
+  const st = taxPage.state || (taxPage.state = { from: '', to: '' });
+  app.innerHTML = `
+    <div class="page-head"><h2>كشف ضريبة المبيعات</h2>
+      <div class="btn-row">
+        <button class="btn primary" type="button" data-share>${icon('share')} مشاركة</button><button class="btn btn-print" type="button" onclick="print()">طباعة</button>
+        <button class="btn" type="button" id="taxPay">دفعة للضريبة</button>
+      </div></div>
+    <div class="card filters dates">
+      <label>من تاريخ<input id="xf" type="date" value="${st.from}"></label>
+      <label>إلى تاريخ<input id="xt" type="date" value="${st.to}"></label>
+    </div>
+    <div class="card" id="xBody"></div>`;
+  const draw = () => {
+    st.from = $('#xf').value; st.to = $('#xt').value;
+    const all = taxEntries();
+    let prev = 0, hasPrev = false;
+    const rows = [];
+    for (const e of all) {
+      if (st.from && (e.date || '') < st.from) { prev += e.debit - e.credit; hasPrev = true; continue; }
+      if (st.to && e.date > st.to) continue;
+      rows.push(e);
+    }
+    const sum = k => rows.filter(r => r.kind === k).reduce((a, r) => a + r.debit + r.credit, 0);
+    const outTax = sum('sale'), inTax = sum('purchase'), paid = sum('taxpay');
+    const sales = rows.filter(r => r.kind === 'sale').reduce((a, r) => a + r.base, 0);
+    const buys = rows.filter(r => r.kind === 'purchase').reduce((a, r) => a + r.base, 0);
+    let bal = prev;
+    const balTxt = v => round(v) > 0 ? `${money(v)} <small>علينا</small>` : round(v) < 0 ? `${money(-v)} <small>لنا</small>` : money(0);
+    const period = st.from || st.to ? `الفترة: ${st.from || 'البداية'} — ${st.to || today()}` : `حتى تاريخ ${today()}`;
+    const net = prev + outTax - inTax - paid;
+    $('#xBody').innerHTML = `
+      <div class="print-head">
+        <div class="doc-head"><h2>${esc(db.settings.shopName)}</h2><h2>كشف ضريبة المبيعات</h2></div>
+        <div class="doc-meta"><div><span>الفترة: </span><b>${period.replace(/^الفترة: /, '')}</b></div></div>
+      </div>
+      <div class="sum-boxes tax-boxes">
+        <div><small>مبيعات خاضعة (قبل الضريبة)</small><b>${money(sales)}</b></div>
+        <div><small>ضريبة المبيعات (علينا)</small><b class="owes">${money(outTax)}</b></div>
+        <div><small>مشتريات خاضعة (قبل الضريبة)</small><b>${money(buys)}</b></div>
+        <div><small>ضريبة المشتريات (لنا)</small><b class="cred">${money(inTax)}</b></div>
+        <div><small>دفعات للضريبة</small><b>${money(paid)}</b></div>
+        <div class="hl"><small>الصافي المستحق للضريبة</small><b>${balTxt(net)}</b></div>
+      </div>
+      <div class="table-wrap"><table class="tbl"><thead><tr>
+        <th>التاريخ</th><th>البيان</th><th class="num">قبل الضريبة</th><th class="num">ضريبة مبيعات</th><th class="num">ضريبة مشتريات ودفعات</th><th class="num">الرصيد</th><th></th></tr></thead><tbody>
+        ${hasPrev ? `<tr class="muted-row"><td>${esc(st.from)}</td><td>رصيد ما قبل الفترة</td><td></td><td></td><td></td><td class="num">${balTxt(prev)}</td><td></td></tr>` : ''}
+        ${rows.map(r => { bal += r.debit - r.credit; return `<tr>
+          <td>${esc(r.date)}</td><td>${r.link ? `<a href="${r.link}">${esc(r.desc)}</a>` : esc(r.desc)}${r.rate ? ` <small>(${esc(r.rate)}%)</small>` : ''}</td>
+          <td class="num">${r.base != null ? money(r.base) : ''}</td>
+          <td class="num">${r.debit ? money(r.debit) : ''}</td><td class="num">${r.credit ? money(r.credit) : ''}</td>
+          <td class="num">${balTxt(bal)}</td>
+          <td>${r.kind === 'taxpay' ? `<button class="btn sm danger" type="button" data-taxdel="${r.id}">حذف</button>` : ''}</td></tr>`; }).join('')}
+        ${!rows.length && !hasPrev ? '<tr><td colspan="7" class="empty">لا توجد حركات ضريبة</td></tr>' : ''}
+      </tbody><tfoot><tr><th colspan="3">المجموع</th><th class="num">${money(outTax)}</th><th class="num">${money(inTax + paid)}</th><th class="num">${balTxt(bal)}</th><th></th></tr></tfoot></table></div>
+      <div class="balance-box">الصافي المستحق للضريبة: ${balTxt(net)} ${cur()}</div>
+      <p class="hint no-print">بيعرض الفواتير اللي عليها ضريبة بس. كشوفات العملاء والموردين بتعرض إجمالي الفاتورة بدون تفصيل الضريبة.</p>`;
+  };
+  $('#xBody').onclick = e => {
+    const b = e.target.closest('[data-taxdel]');
+    if (!b || !confirm('متأكد بدك تحذف دفعة الضريبة؟')) return;
+    db.payments = db.payments.filter(x => x.id !== b.dataset.taxdel);
+    save(); toast('تم الحذف'); draw();
+  };
+  $('#xf').oninput = draw; $('#xt').oninput = draw;
+  $('#taxPay').onclick = () => taxPayDialog(draw);
+  draw();
+}
+
 /* ----- الصندوق ----- */
 function cashPage() {
   const st = cashPage.state || (cashPage.state = { from: '', to: '' });
@@ -897,6 +1028,8 @@ function settingsPage() {
       <div class="grid">
         <label>اسم المحل<input name="shopName" value="${esc(s.shopName)}"></label>
         <label>العملة<input name="currency" value="${esc(s.currency)}" placeholder="د.أ، ل.س، $ ..."></label>
+        <label>نسبة ضريبة المبيعات الافتراضية %<input name="taxRate" type="number" step="any" min="0" value="${esc(s.taxRate ?? 16)}"></label>
+        <label class="chk"><input type="checkbox" name="taxIncl" ${s.taxIncl ? 'checked' : ''}> الأسعار بالفواتير شاملة الضريبة (افتراضياً)</label>
       </div>
       <div class="actions"><button class="btn primary" type="submit">حفظ</button></div>
     </form>
@@ -938,7 +1071,7 @@ function settingsPage() {
   $('#setForm').onsubmit = e => {
     e.preventDefault();
     const f = e.target;
-    Object.assign(db.settings, { shopName: f.shopName.value.trim() || 'محلي', currency: f.currency.value.trim(), openingCash: s.openingCash });
+    Object.assign(db.settings, { shopName: f.shopName.value.trim() || 'محلي', currency: f.currency.value.trim(), openingCash: s.openingCash, taxRate: round(num(f.taxRate.value)), taxIncl: f.taxIncl.checked });
     save(); toast('تم الحفظ'); render();
   };
   if ($('#logoutBtn')) $('#logoutBtn').onclick = cloudLogout;
@@ -1463,7 +1596,7 @@ function comboSelect(sel) {
 /* ---------- تحسينات العرض: جداول كبطاقات على التلفون + أيقونات العناوين ---------- */
 function cardify(root = app) {
   const PRI = ['البيان', 'الاسم', 'الحساب', 'العميل', 'المورد', 'الصنف'];
-  const AMT = ['الرصيد', 'الصافي', 'المبلغ', 'المجموع'];
+  const AMT = ['الرصيد', 'الصافي', 'المبلغ', 'المجموع', 'الإجمالي'];
   for (const t of root.querySelectorAll('table.tbl')) {
     const ths = [...t.querySelectorAll('thead th')].map(th => th.textContent.trim());
     if (!ths.length) continue;
@@ -1500,7 +1633,7 @@ function cardify(root = app) {
 
 const HEAD_IC = { home: 'home', invoices: a => a === 'purchase' ? 'purchase' : 'sale', new: a => a === 'purchase' ? 'purchase' : 'sale',
   edit: 'sale', invoice: 'sale', payments: a => a === 'payment' ? 'moneyOut' : 'moneyIn', parties: a => a === 'supplier' ? 'truck' : 'users',
-  statement: 'ledger', reports: 'chart', report: 'chart', cash: 'chart', settings: 'gear', import: 'list' };
+  statement: 'ledger', reports: 'chart', report: 'chart', cash: 'chart', settings: 'gear', import: 'list', tax: 'tax' };
 function decorate(name, arg) {
   const h = $('.page-head h2', app);
   if (h && !h.querySelector('.ph-ic')) {
@@ -1511,7 +1644,7 @@ function decorate(name, arg) {
 }
 
 function setTab(name, arg) {
-  const grp = { home: 'home', reports: 'reports', report: 'reports', cash: 'reports', statement: 'statement' }[name]
+  const grp = { home: 'home', reports: 'reports', report: 'reports', cash: 'reports', tax: 'reports', statement: 'statement' }[name]
     || (['invoices', 'new'].includes(name) ? (arg === 'purchase' ? 'purchase' : 'sale')
       : name === 'payments' ? (arg === 'payment' ? 'purchase' : 'sale')
       : name === 'parties' ? (arg === 'supplier' ? 'purchase' : 'sale') : '');
@@ -1527,7 +1660,7 @@ new MutationObserver(() => {
 const routes = {
   home, new: newInvoice, edit: editInvoice, invoice: viewInvoice, invoices: invoicesList,
   payments: paymentsPage, parties: partiesPage, statement: statementPage,
-  cash: cashPage, settings: settingsPage, report: reportPage, reports: reportsPage, import: importPage
+  cash: cashPage, settings: settingsPage, report: reportPage, reports: reportsPage, import: importPage, tax: taxPage
 };
 
 function render(soft) {

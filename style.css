@@ -671,3 +671,30 @@ input[type="date"]::-webkit-date-and-time-value { text-align: right; }
 .pdf-sheet * { letter-spacing: 0 !important; }
 .pdf-sheet .doc-sum { margin: 14px 0 0 0; margin-right: auto; }
 .pdf-sheet > main { margin: 0 !important; padding: 0 !important; max-width: none !important; width: 100% !important; }
+
+/* ---------- Sales tax ---------- */
+label.chk { flex-direction: row; align-items: center; gap: 10px; color: var(--text); font-size: .95rem; cursor: pointer; align-self: center; }
+label.chk input { width: 20px; height: 20px; accent-color: var(--gold); flex: none; }
+.totals .sum.grand b { font-size: 1.7rem; }
+
+.sum-boxes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+.sum-boxes > div { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line-soft); background: rgba(255, 255, 255, .03); }
+.sum-boxes small { display: block; color: var(--muted); font-size: .78rem; }
+.sum-boxes b { display: block; font-size: 1.15rem; direction: ltr; text-align: right; }
+.sum-boxes b small { display: inline; font-size: .78rem; }
+.sum-boxes .hl { border-color: rgba(212, 175, 55, .5); background: radial-gradient(300px 90px at 100% 0, rgba(212, 175, 55, .18), transparent), rgba(212, 175, 55, .05); }
+.sum-boxes .hl b { color: var(--gold-light); font-size: 1.35rem; }
+.pdf-sheet .tax-boxes { grid-template-columns: repeat(3, 1fr); }
+.pdf-sheet .tax-boxes .hl b small { color: #f3dd8b; }
+
+@media (max-width: 899px) {
+  .totals > .sum { order: 1; }
+  .totals > label { grid-column: auto; order: 2; }
+  .totals > label.chk { grid-column: 1 / -1; order: 3; }
+  .totals > .sum.grand { grid-column: 1 / -1; order: 4; text-align: right; padding-top: 10px; border-top: 1px dashed var(--line); }
+  .totals > .sum.grand b { text-align: right; }
+  .sum-boxes { grid-template-columns: 1fr 1fr; }
+  .sum-boxes .hl { grid-column: 1 / -1; }
+}
+@media print { .sum-boxes { border: 0; } }
+@media (max-width: 899px) { .filters.dates > label:first-child { grid-column: auto; } }
