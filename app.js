@@ -54,6 +54,9 @@ function logoMark(c) {
     <circle cx="101.6" cy="67.6" r="2.2" fill="${c}" stroke="none"/>
   </g>`;
 }
+// شعار المؤسسة الأصلي (صورة)
+const logoImg = (cls = '', dark = false) => `<img class="logo ${cls}" src="${dark ? 'logo-dark.png' : 'logo-gold.png'}" alt="Summit Road">`;
+
 function emblem(cls = '') {
   const g = 'eg' + (++emblemSeq);
   return `<svg class="${cls}" viewBox="0 0 64 64" aria-hidden="true">
@@ -308,9 +311,8 @@ function home() {
       <span class="badge">${icon(ic)}</span><span class="t">${t}</span><span class="s">${sub}</span></${tag}>`;
   app.innerHTML = `
     <section class="hero">
-      ${emblem('emblem-lg')}
+      ${logoImg('logo-hero')}
       <h2>${esc(db.settings.shopName)}</h2>
-      <div class="en-brand">Summit Road<small>For programming and office equipment</small></div>
       <div class="date">${dateStr}</div>
       <div class="ornament"><span></span><i></i><span></span></div>
     </section>
@@ -1206,7 +1208,7 @@ function setSync(state, text) {
 function showGate(mode) {
   let g = $('#gate');
   if (!g) { g = document.createElement('div'); g.id = 'gate'; document.body.appendChild(g); }
-  const head = `${emblem('emblem-lg')}<h2>${esc(db.settings.shopName || 'مؤسسة طريق القمة')}</h2>`;
+  const head = `${logoImg('logo-gate')}<h2>${esc(db.settings.shopName || 'مؤسسة طريق القمة')}</h2>`;
   if (mode === 'loading') {
     g.innerHTML = `<div class="gate-box">${head}<p class="hint">جاري تحميل البيانات...</p><div class="spinner"></div></div>`;
   } else {
@@ -1441,13 +1443,14 @@ async function shareView() {
     sheet.className = 'pdf-sheet';
     sheet.innerHTML = `
       <div class="pdf-head">
-        <div class="brand">${emblem('pdf-emblem')}<div><div class="nm">${esc(db.settings.shopName)}</div><div class="tg">للبرمجة واللوازم المكتبية · <span class="en">Summit Road</span></div></div></div>
+        <div class="brand">${logoImg('pdf-logo', true)}<div><div class="nm">${esc(db.settings.shopName)}</div><div class="tg">للبرمجة واللوازم المكتبية</div></div></div>
         <div class="doc"><div class="tt">${esc(title)}</div><div class="dt">${dateStr}</div></div>
       </div>
       <div class="pdf-rule"><span></span><i></i><span></span></div>`;
     sheet.appendChild(clone);
     document.body.appendChild(sheet);
     await (document.fonts ? document.fonts.ready : Promise.resolve());
+    await Promise.all([...sheet.querySelectorAll('img')].map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; })));
 
     const w = sheet.offsetWidth, h = sheet.offsetHeight;
     const scale = Math.max(1.2, Math.min(2, Math.sqrt(16e6 / (w * h))));
@@ -1703,7 +1706,7 @@ function render(soft) {
 }
 
 $$('[data-ic]').forEach(el => el.insertAdjacentHTML('afterbegin', icon(el.dataset.ic)));
-$$('[data-emblem]').forEach(el => { el.innerHTML = emblem('emblem'); });
+$$('[data-emblem]').forEach(el => { el.innerHTML = logoImg('logo-top'); });
 $('#menuBtn').onclick = () => document.body.classList.toggle('nav-open');
 $('#navShade').onclick = () => document.body.classList.remove('nav-open');
 window.addEventListener('hashchange', () => render());

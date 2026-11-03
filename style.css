@@ -703,3 +703,22 @@ label.chk input { width: 20px; height: 20px; accent-color: var(--gold); flex: no
 .en-brand { font-family: "Quicksand", sans-serif; font-weight: 600; font-size: 1.15rem; color: var(--gold-light); direction: ltr; letter-spacing: .5px; margin-bottom: 4px; }
 .en-brand small { display: block; font-size: .7rem; font-weight: 500; color: var(--muted); letter-spacing: .3px; }
 .pdf-head .tg .en { font-family: "Quicksand", sans-serif; font-weight: 600; }
+
+
+/* ---------- Real logo ---------- */
+img.logo { display: block; }
+.brand .emblem { width: auto; height: auto; }
+.logo-top { height: 40px; width: auto; }
+.logo-hero { width: min(340px, 82%); margin: 0 auto 6px; filter: drop-shadow(0 8px 24px rgba(212, 175, 55, .25)); animation: float 6s ease-in-out infinite; }
+.logo-gate { width: min(240px, 80%); margin: 0 auto; }
+.pdf-head .pdf-logo { height: 74px; width: auto; }
+.print-brand { display: none; }
+@media print {
+  .print-brand { display: flex !important; align-items: center; gap: 16px; padding-bottom: 10px; margin-bottom: 14px; border-bottom: 2px solid #c9a227; }
+  .print-brand img { height: 70px; width: auto; }
+  .print-brand b { display: block; font-family: "Reem Kufi", "Tajawal", sans-serif; font-size: 22px; color: #111; }
+  .print-brand span { color: #6b7280; font-size: 12px; }
+  .print-head .doc-head h2:first-child { display: none; }
+}
+@media (max-width: 899px) { .logo-top { height: 34px; } }
+@media print { .print-head .doc-head { display: none !important; } .ph-ic { display: none !important; } .page-head h2 { color: #111 !important; } }
