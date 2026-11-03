@@ -42,7 +42,18 @@ const ICONS = {
 const icon = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n] || ''}</svg>`;
 
 let emblemSeq = 0;
-// شعار المؤسسة: قمة جبل وطريق صاعد ونجمة
+// شعار Summit Road: فرشاة وطريق متعرّج (viewBox 0 0 120 80)
+function logoMark(c) {
+  return `<g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M52 3 L42.5 20" stroke="${c}" stroke-width="4.2"/>
+    <path d="M38.6 18.6 L46.8 23.2" stroke="${c}" stroke-width="4.6"/>
+    <path d="M37.6 21.2 L47.4 26.6 C 43 33, 37 39, 28 45 C 24.5 46.5, 21 45.8, 19.6 43.2 C 25 37, 32 29, 37.6 21.2 Z" fill="${c}" stroke="${c}" stroke-width="1"/>
+    <path d="M24 42 L33 31 M27.5 43.6 L37 32.6 M31.5 43 L40.5 33" stroke="#0b101b" stroke-width=".8" opacity=".45"/>
+    <path d="M24 46.5 C 30 46, 38 43.5, 44 42.5 C 47 42, 46 44, 38 47.5 C 33 49.6, 36 50.6, 42 49.8 C 48 49, 54 47.6, 58 47.4" stroke="${c}" stroke-width="2.6"/>
+    <path d="M58 47.4 C 74 46.6, 94 47, 104 54 C 111 59, 110 69, 102 70.5 C 97 71.4, 95 66.5, 99.5 65" stroke="${c}" stroke-width="5"/>
+    <circle cx="101.6" cy="67.6" r="2.2" fill="${c}" stroke="none"/>
+  </g>`;
+}
 function emblem(cls = '') {
   const g = 'eg' + (++emblemSeq);
   return `<svg class="${cls}" viewBox="0 0 64 64" aria-hidden="true">
@@ -50,10 +61,7 @@ function emblem(cls = '') {
       <stop offset="0" stop-color="#f8eab0"/><stop offset=".5" stop-color="#d4af37"/><stop offset="1" stop-color="#a8841f"/></linearGradient></defs>
     <circle cx="32" cy="32" r="30.5" fill="#0b101b" stroke="url(#${g})" stroke-width="1.5"/>
     <circle cx="32" cy="32" r="26.5" fill="none" stroke="url(#${g})" stroke-width=".6" opacity=".55"/>
-    <path d="M12.5 45 25 25.5l5.2 7.6L37.5 21 51.5 45z" fill="none" stroke="url(#${g})" stroke-width="2" stroke-linejoin="round"/>
-    <path d="m37.5 21-3 5 1.6-.6 1.4 1.4 1.4-1.4 1.6.6z" fill="url(#${g})"/>
-    <path d="M28 45c3.5-2.6-1.5-4.6 2.4-7.2 2.6-1.7 4.6-3.6 5.6-6.8" fill="none" stroke="url(#${g})" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="1.8 2.2"/>
-    <path d="m37.5 10.5 1.15 2.45 2.7.3-2 1.85.55 2.65-2.4-1.35-2.4 1.35.55-2.65-2-1.85 2.7-.3z" fill="url(#${g})"/>
+    <g transform="translate(2.5 13.5) scale(.46)">${logoMark(`url(#${g})`)}</g>
   </svg>`;
 }
 
@@ -302,6 +310,7 @@ function home() {
     <section class="hero">
       ${emblem('emblem-lg')}
       <h2>${esc(db.settings.shopName)}</h2>
+      <div class="en-brand">Summit Road<small>For programming and office equipment</small></div>
       <div class="date">${dateStr}</div>
       <div class="ornament"><span></span><i></i><span></span></div>
     </section>
@@ -1432,7 +1441,7 @@ async function shareView() {
     sheet.className = 'pdf-sheet';
     sheet.innerHTML = `
       <div class="pdf-head">
-        <div class="brand">${emblem('pdf-emblem')}<div><div class="nm">${esc(db.settings.shopName)}</div><div class="tg">كشوفات ومستندات مالية</div></div></div>
+        <div class="brand">${emblem('pdf-emblem')}<div><div class="nm">${esc(db.settings.shopName)}</div><div class="tg">للبرمجة واللوازم المكتبية · <span class="en">Summit Road</span></div></div></div>
         <div class="doc"><div class="tt">${esc(title)}</div><div class="dt">${dateStr}</div></div>
       </div>
       <div class="pdf-rule"><span></span><i></i><span></span></div>`;

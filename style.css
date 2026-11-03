@@ -698,3 +698,8 @@ label.chk input { width: 20px; height: 20px; accent-color: var(--gold); flex: no
 }
 @media print { .sum-boxes { border: 0; } }
 @media (max-width: 899px) { .filters.dates > label:first-child { grid-column: auto; } }
+
+/* ---------- Summit Road brand ---------- */
+.en-brand { font-family: "Quicksand", sans-serif; font-weight: 600; font-size: 1.15rem; color: var(--gold-light); direction: ltr; letter-spacing: .5px; margin-bottom: 4px; }
+.en-brand small { display: block; font-size: .7rem; font-weight: 500; color: var(--muted); letter-spacing: .3px; }
+.pdf-head .tg .en { font-family: "Quicksand", sans-serif; font-weight: 600; }
