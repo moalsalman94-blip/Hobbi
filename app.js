@@ -204,9 +204,16 @@ function partyBal(v) {
   if (v < 0) return `<span class="cred">${money(-v)}</span> <small>له</small>`;
   return money(0);
 }
+function partyBal6(v) {
+  v = round6(v);
+  if (v > 0) return `<span class="owes">${money6(v)}</span> <small>عليه</small>`;
+  if (v < 0) return `<span class="cred">${money6(-v)}</span> <small>له</small>`;
+  return money6(0);
+}
 const cashBal = v => (round(v) < 0 ? '-' : '') + money(Math.abs(v));
 
 function statementTable(entries, from, to, o) {
+  const f = o.fmt || money, rr = o.rnd || round;
   let prev = 0, hasPrev = false;
   const rows = [];
   for (const e of entries) {
@@ -222,12 +229,12 @@ function statementTable(entries, from, to, o) {
     bal += e.debit - e.credit; td += e.debit; tc += e.credit;
     const d = e.link ? `<a href="${e.link}">${esc(e.desc)}</a>` : esc(e.desc);
     html += `<tr><td>${esc(e.date)}</td><td>${d}</td>
-      <td class="num">${e.debit ? money(e.debit) : ''}</td><td class="num">${e.credit ? money(e.credit) : ''}</td>
+      <td class="num">${e.debit ? f(e.debit) : ''}</td><td class="num">${e.credit ? f(e.credit) : ''}</td>
       <td class="num">${o.bal(bal)}</td></tr>`;
   }
   if (!rows.length && !hasPrev) html += `<tr><td colspan="5" class="empty">لا توجد حركات</td></tr>`;
-  html += `</tbody><tfoot><tr><th colspan="2">مجموع الفترة</th><th class="num">${money(td)}</th><th class="num">${money(tc)}</th><th class="num">${o.bal(bal)}</th></tr></tfoot></table></div>`;
-  return { html, balance: round(bal) };
+  html += `</tbody><tfoot><tr><th colspan="2">مجموع الفترة</th><th class="num">${f(td)}</th><th class="num">${f(tc)}</th><th class="num">${o.bal(bal)}</th></tr></tfoot></table></div>`;
+  return { html, balance: rr(bal) };
 }
 
 /* ---------- واجهة: أدوات ---------- */
@@ -283,7 +290,7 @@ function partyDialog(type, p, after) {
         p = { id: uid(), type, at: Date.now() };
         db.parties.push(p);
       }
-      Object.assign(p, { name, phone: d.phone.trim(), opening: round(num(d.opening)) });
+      Object.assign(p, { name, phone: d.phone.trim(), opening: round6(num(d.opening)) });
       save(); toast('تم الحفظ');
       after && after(p);
     });
@@ -306,7 +313,7 @@ function paymentDialog(pm, kind, partyId, after) {
     <label>ملاحظة<input name="note" value="${esc(pm.note)}"></label>`,
     d => {
       const k = kind;
-      const amount = round(num(d.amount));
+      const amount = round6(num(d.amount));
       if (!d.partyId) { alert('اختر ' + (k === 'receipt' ? 'العميل' : 'المورد')); return false; }
       if (!(amount > 0)) { alert('اكتب المبلغ'); return false; }
       if (!d.date) { alert('اختر التاريخ'); return false; }
@@ -746,11 +753,11 @@ function statementPage(arg) {
         : `<p class="hint">لا يوجد ${all ? 'عملاء أو موردين' : PTYPES[type]} بعد.</p>`;
       return;
     }
-    const { html, balance } = statementTable(partyEntries(p), st.from, st.to, { dr: 'مدين - عليه', cr: 'دائن - له', bal: partyBal });
+    const { html, balance } = statementTable(partyEntries(p), st.from, st.to, { dr: 'مدين - عليه', cr: 'دائن - له', bal: partyBal6, fmt: money6, rnd: round6 });
     const period = st.from || st.to ? `الفترة: ${st.from || 'البداية'} — ${st.to || today()}` : `حتى تاريخ ${today()}`;
     let verdict = 'الحساب مسكّر (الرصيد صفر)';
-    if (balance > 0) verdict = `الرصيد المستحق على ${esc(p.name)}: ${money(balance)} ${cur()}`;
-    if (balance < 0) verdict = `الرصيد المستحق لـ ${esc(p.name)}: ${money(-balance)} ${cur()}`;
+    if (balance > 0) verdict = `الرصيد المستحق على ${esc(p.name)}: ${money6(balance)} ${cur()}`;
+    if (balance < 0) verdict = `الرصيد المستحق لـ ${esc(p.name)}: ${money6(-balance)} ${cur()}`;
     const ents = partyEntries(p).filter(e => (!st.from || (e.date || '') >= st.from) && (!st.to || !e.date || e.date <= st.to));
     const sDr = ents.reduce((a, e) => a + e.debit, 0), sCr = ents.reduce((a, e) => a + e.credit, 0);
     const state = balance > 0 ? 'عليه' : balance < 0 ? 'له' : 'مسكّر';
@@ -758,10 +765,10 @@ function statementPage(arg) {
       <div class="stmt-hero no-pdf">
         <div class="who"><span class="avatar lg">${esc(initial(p.name))}</span>
           <div><div class="nm">${esc(p.name)}</div><div class="sub">${PTYPE[p.type]}${p.phone ? ' · <span dir="ltr">' + esc(p.phone) + '</span>' : ''} · ${period}</div></div></div>
-        <div class="bal ${balance > 0 ? 'owes' : balance < 0 ? 'cred' : ''}"><small>الرصيد</small><b>${money(Math.abs(balance))}</b><span>${cur()} · ${state}</span></div>
+        <div class="bal ${balance > 0 ? 'owes' : balance < 0 ? 'cred' : ''}"><small>الرصيد</small><b>${money6(Math.abs(balance))}</b><span>${cur()} · ${state}</span></div>
         <div class="mini">
-          <div><small>مجموع المدين</small><b>${money(sDr)}</b></div>
-          <div><small>مجموع الدائن</small><b>${money(sCr)}</b></div>
+          <div><small>مجموع المدين</small><b>${money6(sDr)}</b></div>
+          <div><small>مجموع الدائن</small><b>${money6(sCr)}</b></div>
           <div><small>عدد الحركات</small><b>${ents.length}</b></div>
         </div>
       </div>
@@ -770,9 +777,9 @@ function statementPage(arg) {
         <div class="doc-meta"><div><span>${PTYPE[p.type]}: </span><b>${esc(p.name)}</b></div>
           ${p.phone ? `<div><span>الهاتف: </span><b dir="ltr">${esc(p.phone)}</b></div>` : ''}<div><span>الفترة: </span><b>${period.replace(/^الفترة: /, '')}</b></div></div>
         <div class="sum-boxes">
-          <div><small>مجموع المدين</small><b>${money(sDr)}</b></div>
-          <div><small>مجموع الدائن</small><b>${money(sCr)}</b></div>
-          <div class="hl"><small>الرصيد ${state === 'مسكّر' ? '' : '(' + state + ')'}</small><b>${money(Math.abs(balance))} ${cur()}</b></div>
+          <div><small>مجموع المدين</small><b>${money6(sDr)}</b></div>
+          <div><small>مجموع الدائن</small><b>${money6(sCr)}</b></div>
+          <div class="hl"><small>الرصيد ${state === 'مسكّر' ? '' : '(' + state + ')'}</small><b>${money6(Math.abs(balance))} ${cur()}</b></div>
         </div>
       </div>
       ${html}
