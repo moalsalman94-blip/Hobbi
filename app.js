@@ -135,6 +135,19 @@ function invCalc(inv) {
 }
 const invTotal = inv => invCalc(inv).total;
 const nextNo = list => list.reduce((m, x) => Math.max(m, +x.no || 0), 0) + 1;
+// رقم الفاتورة ممكن يكون حروف وأرقام (مثلاً EIN00559): الرقم التالي بيزيد آخر رقم مع الحفاظ على الأصفار
+function nextInvNo(list) {
+  const last = [...list].sort((a, b) => (b.at || 0) - (a.at || 0))[0];
+  const m = last && String(last.no).match(/^(.*?)(\d+)$/);
+  if (m && !/^\d+$/.test(String(last.no))) {
+    const n = String(+m[2] + 1).padStart(m[2].length, '0');
+    let cand = m[1] + n;
+    while (list.some(x => normNo(x.no) === normNo(cand))) cand = m[1] + String(+cand.slice(m[1].length) + 1).padStart(m[2].length, '0');
+    return cand;
+  }
+  return String(nextNo(list));
+}
+const normNo = v => String(v ?? '').trim().toUpperCase();
 const byDate = (a, b) => (a.date || '').localeCompare(b.date || '') || (a.at || 0) - (b.at || 0);
 
 let db = loadDb();
@@ -362,7 +375,7 @@ function bindRowLinks(root = app) {
 function newInvoice(kind) {
   if (!KIND[kind]) kind = 'sale';
   invoiceForm({
-    kind, no: nextNo(db.invoices.filter(i => i.kind === kind)), date: today(), partyId: '',
+    kind, no: nextInvNo(db.invoices.filter(i => i.kind === kind)), date: today(), partyId: '',
     pay: 'cash', lines: [{ itemId: null, name: '', qty: 1, price: '' }], discount: '', note: '',
     taxRate: db.settings.taxRate ?? 16, taxIncl: !!db.settings.taxIncl
   }, true);
@@ -382,7 +395,7 @@ function invoiceForm(inv, isNew) {
     <div class="page-head"><h2>${isNew ? `فاتورة ${KIND[kind]} جديدة` : `تعديل فاتورة ${KIND[kind]} رقم ${esc(inv.no)}`}</h2></div>
     <form id="invForm" class="card" novalidate>
       <div class="grid g2">
-        <label>رقم الفاتورة<input name="no" type="number" min="1" required value="${esc(inv.no)}"></label>
+        <label>رقم الفاتورة<input name="no" type="text" dir="ltr" autocomplete="off" autocapitalize="characters" required value="${esc(inv.no)}" placeholder="مثلاً EIN00559"></label>
         <label>التاريخ<input name="date" type="date" required value="${esc(inv.date)}"></label>
       </div>
       <div class="paybox">
@@ -496,9 +509,10 @@ function invoiceForm(inv, isNew) {
       .filter(l => l.name);
     if (!lines.length) return alert('أضف صنف واحد على الأقل');
     if (lines.some(l => !(l.qty > 0))) return alert('في سطر كميته صفر أو فاضية');
-    const no = parseInt(form.no.value, 10);
-    if (!(no > 0)) return alert('اكتب رقم الفاتورة');
-    if (db.invoices.some(x => x.kind === kind && x.id !== inv.id && +x.no === no)) return alert('رقم الفاتورة مستخدم بفاتورة ثانية');
+    const raw = form.no.value.trim();
+    if (!raw) return alert('اكتب رقم الفاتورة');
+    const no = /^\d+$/.test(raw) ? +raw : raw;
+    if (db.invoices.some(x => x.kind === kind && x.id !== inv.id && normNo(x.no) === normNo(raw))) return alert('رقم الفاتورة مستخدم بفاتورة ثانية');
     if (!form.date.value) return alert('اختر التاريخ');
     const discount = round(num(form.discount.value));
     const total = round(lines.reduce((s, l) => s + l.qty * l.price, 0) - discount);
