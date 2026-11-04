@@ -158,6 +158,16 @@ let db = loadDb();
 /* ---------- الحسابات ---------- */
 // كل حركة: مدين (debit) / دائن (credit). الرصيد = مدين − دائن
 // موجب = عليه (مدين لنا)، سالب = له (دائن لنا)
+// أسماء الأصناف للعرض بكشف الحساب (أول 3 أصناف) + الملاحظة إذا مختلفة
+function invItemsText(inv) {
+  const names = [...new Set((inv.lines || []).map(l => String(l.name || '').trim()).filter(Boolean))];
+  let t = names.slice(0, 3).join('، ');
+  if (names.length > 3) t += ` و${names.length - 3} أصناف ثانية`;
+  const note = String(inv.note || '').trim();
+  if (note && !names.includes(note)) t = t ? `${t} (${note})` : note;
+  return t ? ' — ' + t : '';
+}
+
 function partyEntries(p) {
   const e = [];
   const ob = num(p.opening);
@@ -167,7 +177,7 @@ function partyEntries(p) {
     // الفواتير النقدية لا تظهر في كشف الحساب، فقط الذمم
     if (inv.partyId !== p.id || !isCredit(inv)) continue;
     const t = invTotal(inv), sale = inv.kind === 'sale';
-    e.push({ date: inv.date, at: inv.at, link: '#/invoice/' + inv.id, desc: `فاتورة ${KIND[inv.kind]} ذمم رقم ${inv.no}${inv.note ? ' — ' + inv.note : ''}`, debit: sale ? t : 0, credit: sale ? 0 : t });
+    e.push({ date: inv.date, at: inv.at, link: '#/invoice/' + inv.id, desc: `فاتورة ${KIND[inv.kind]} ذمم رقم ${inv.no}${invItemsText(inv)}`, debit: sale ? t : 0, credit: sale ? 0 : t });
   }
   for (const pm of db.payments) {
     if (pm.partyId !== p.id) continue;
