@@ -13,6 +13,9 @@ const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const round = n => Math.round((+n || 0) * 1000) / 1000;
 const money = n => round(n).toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+// الفاتورة نفسها بتعرض 6 خانات بعد الفاصلة
+const round6 = n => Math.round((+n || 0) * 1e6) / 1e6;
+const money6 = n => round6(n).toLocaleString('en-US', { minimumFractionDigits: 6, maximumFractionDigits: 6 });
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 const num = v => { const n = parseFloat(String(v ?? '').replace(',', '.')); return isFinite(n) ? n : 0; };
 const byName = (a, b) => a.name.localeCompare(b.name, 'ar');
@@ -123,15 +126,15 @@ const isCredit = inv => inv.pay === 'credit' && !!inv.partyId;
 const cur = () => esc(db.settings.currency);
 const initial = n => (String(n || '').replace(/^(ال|مؤسسة|شركة)\s*/, '').trim()[0] || '؟');
 
-const subTotal = inv => round(inv.lines.reduce((s, l) => s + num(l.qty) * num(l.price), 0));
-const invBase = inv => round(subTotal(inv) - num(inv.discount));
+const subTotal = inv => round6(inv.lines.reduce((s, l) => s + num(l.qty) * num(l.price), 0));
+const invBase = inv => round6(subTotal(inv) - num(inv.discount));
 // الضريبة: الأسعار قبل الضريبة (بتنضاف) أو شاملة الضريبة (بتنحسب من جوّا)
 function invCalc(inv) {
   const base = invBase(inv), r = num(inv.taxRate) / 100;
   if (!r) return { net: base, tax: 0, total: base };
-  if (inv.taxIncl) { const net = round(base / (1 + r)); return { net, tax: round(base - net), total: base }; }
-  const tax = round(base * r);
-  return { net: base, tax, total: round(base + tax) };
+  if (inv.taxIncl) { const net = round6(base / (1 + r)); return { net, tax: round6(base - net), total: base }; }
+  const tax = round6(base * r);
+  return { net: base, tax, total: round6(base + tax) };
 }
 const invTotal = inv => invCalc(inv).total;
 const nextNo = list => list.reduce((m, x) => Math.max(m, +x.no || 0), 0) + 1;
@@ -442,7 +445,7 @@ function invoiceForm(inv, isNew) {
       <td><input list="itemList" data-i="${i}" data-f="name" value="${esc(l.name)}" placeholder="اسم الصنف"></td>
       <td><input type="number" step="any" min="0" data-i="${i}" data-f="qty" value="${esc(l.qty)}"></td>
       <td><input type="number" step="any" min="0" data-i="${i}" data-f="price" value="${esc(l.price)}"></td>
-      <td class="num" data-total="${i}">${money(num(l.qty) * num(l.price))}</td>
+      <td class="num" data-total="${i}">${money6(num(l.qty) * num(l.price))}</td>
       <td><button type="button" class="btn sm danger" data-del="${i}" title="حذف السطر">✕</button></td></tr>`;
   }
   function renderLines() { tbody.innerHTML = inv.lines.map(lineRow).join(''); recalc(); }
@@ -463,9 +466,9 @@ function invoiceForm(inv, isNew) {
     inv.taxRate = form.taxRate.value;
     inv.taxIncl = form.taxIncl.checked;
     const c = invCalc(inv);
-    $('#tSub').textContent = money(subTotal(inv));
-    $('#tTax').textContent = money(c.tax);
-    $('#tNet').textContent = money(c.total);
+    $('#tSub').textContent = money6(subTotal(inv));
+    $('#tTax').textContent = money6(c.tax);
+    $('#tNet').textContent = money6(c.total);
   }
 
   tbody.addEventListener('input', e => {
@@ -481,7 +484,7 @@ function invoiceForm(inv, isNew) {
         $(`[data-i="${i}"][data-f="price"]`, tbody).value = l.price;
       }
     }
-    $(`[data-total="${i}"]`, tbody).textContent = money(num(l.qty) * num(l.price));
+    $(`[data-total="${i}"]`, tbody).textContent = money6(num(l.qty) * num(l.price));
     recalc();
   });
   tbody.addEventListener('click', e => {
@@ -505,7 +508,7 @@ function invoiceForm(inv, isNew) {
   form.onsubmit = e => {
     e.preventDefault();
     const lines = inv.lines
-      .map(l => ({ itemId: l.itemId, name: String(l.name || '').trim(), qty: round(num(l.qty)), price: round(num(l.price)) }))
+      .map(l => ({ itemId: l.itemId, name: String(l.name || '').trim(), qty: round6(num(l.qty)), price: round6(num(l.price)) }))
       .filter(l => l.name);
     if (!lines.length) return alert('أضف صنف واحد على الأقل');
     if (lines.some(l => !(l.qty > 0))) return alert('في سطر كميته صفر أو فاضية');
@@ -514,7 +517,7 @@ function invoiceForm(inv, isNew) {
     const no = /^\d+$/.test(raw) ? +raw : raw;
     if (db.invoices.some(x => x.kind === kind && x.id !== inv.id && normNo(x.no) === normNo(raw))) return alert('رقم الفاتورة مستخدم بفاتورة ثانية');
     if (!form.date.value) return alert('اختر التاريخ');
-    const discount = round(num(form.discount.value));
+    const discount = round6(num(form.discount.value));
     const total = round(lines.reduce((s, l) => s + l.qty * l.price, 0) - discount);
     if (total < 0) return alert('الخصم أكبر من المجموع');
     const partyId = form.partyId.value;
@@ -571,14 +574,14 @@ function viewInvoice(id) {
         ${party?.phone ? `<div><span>الهاتف: </span>${esc(party.phone)}</div>` : ''}
       </div>
       <div class="table-wrap"><table class="tbl"><thead><tr><th>#</th><th>الصنف</th><th class="num">الكمية</th><th class="num">السعر</th><th class="num">المجموع</th></tr></thead>
-        <tbody>${inv.lines.map((l, i) => `<tr><td>${i + 1}</td><td>${esc(l.name)}</td><td class="num">${esc(l.qty)}</td><td class="num">${money(l.price)}</td><td class="num">${money(num(l.qty) * num(l.price))}</td></tr>`).join('')}</tbody>
+        <tbody>${inv.lines.map((l, i) => `<tr><td>${i + 1}</td><td>${esc(l.name)}</td><td class="num">${esc(l.qty)}</td><td class="num">${money6(l.price)}</td><td class="num">${money6(num(l.qty) * num(l.price))}</td></tr>`).join('')}</tbody>
       </table></div>
       <div class="doc-sum">
-        <div><span>المجموع</span><b>${money(subTotal(inv))}</b></div>
-        ${num(inv.discount) ? `<div><span>الخصم</span><b>${money(inv.discount)}</b></div>` : ''}
-        ${tc.tax ? `<div><span>المبلغ قبل الضريبة</span><b>${money(tc.net)}</b></div>
-        <div><span>ضريبة المبيعات ${esc(num(inv.taxRate))}%${inv.taxIncl ? ' (شاملة)' : ''}</span><b>${money(tc.tax)}</b></div>` : ''}
-        <div><span>الإجمالي</span><b>${money(t)} ${cur()}</b></div>
+        <div><span>المجموع</span><b>${money6(subTotal(inv))}</b></div>
+        ${num(inv.discount) ? `<div><span>الخصم</span><b>${money6(inv.discount)}</b></div>` : ''}
+        ${tc.tax ? `<div><span>المبلغ قبل الضريبة</span><b>${money6(tc.net)}</b></div>
+        <div><span>ضريبة المبيعات ${esc(num(inv.taxRate))}%${inv.taxIncl ? ' (شاملة)' : ''}</span><b>${money6(tc.tax)}</b></div>` : ''}
+        <div><span>الإجمالي</span><b>${money6(t)} ${cur()}</b></div>
       </div>
       ${inv.note ? `<p><b>ملاحظات:</b> ${esc(inv.note)}</p>` : ''}
     </div>`;
